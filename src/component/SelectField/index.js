@@ -56,7 +56,8 @@ const SelectField = ({
             onChangeText(itemValue)
           }}
           {...otherProps}
-        >
+      >
+        <SelectPicker.Item label={`Select ${label}`}  />
           {
            items.length && items.map(item=> <SelectPicker.Item label={item.label} value={item.value} />)
           }

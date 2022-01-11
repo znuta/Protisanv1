@@ -26,7 +26,7 @@
  import {PersistGate} from 'redux-persist/es/integration/react';
  import thunk from 'redux-thunk';
  import {CometChat} from '@cometchat-pro/react-native-chat';
- 
+ import Toast from 'react-native-toast-message';
  let appID = '2008518ba66d45e4';
  let region = 'us';
  let appSetting = new CometChat.AppSettingsBuilder()
@@ -82,6 +82,7 @@
            showHideTransition={statusBarTransition}
            hidden={hidden}
          />
+         <Toast/>
  
          <SplashScreen />
        </PersistGate>

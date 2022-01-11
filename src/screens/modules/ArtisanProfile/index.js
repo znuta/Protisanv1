@@ -26,6 +26,7 @@ import VerifiedIcon from 'src/assets/icons/verified_icon.svg';
 import LogoutIcon from 'src/assets/icons/logout.svg';
 import Feather from 'react-native-vector-icons/Feather'
 import AntDesign from 'react-native-vector-icons/AntDesign'
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import StarRating from 'react-native-star-rating';
 import {Divider, FAB} from 'react-native-elements';
@@ -1217,7 +1218,7 @@ function ArtisanProfile(props) {
       <GalleryModal />
       <GalleryVideoModal />
       {/* <MessageFAB /> */}
-      {/* <SafeAreaView style={{}}>
+      <SafeAreaView style={{}}>
         <View
           style={{
             flexDirection: 'row',
@@ -1228,20 +1229,21 @@ function ArtisanProfile(props) {
           }}>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate('Settings');
+              navigation.navigate('CreateJobOffer', {...artisan});
             }}>
             <View style={{flowDirection: 'row'}}>
-              <AntDesign
-                name="setting"
+              <MaterialIcons
+
+                name="assignment-ind"
                 size={25}
                 color={colors.green}
                 style={{marginBottom: -23}}
               />
-              <Text style={{color: colors.green, left: 28}}>Settings</Text>
+              <Text style={{color: colors.green, left: 28}}>Assign Job</Text>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => {
               _handleLogout(auth.token);
               //logout(auth.token);
@@ -1255,9 +1257,9 @@ function ArtisanProfile(props) {
               <Text style={{color: colors.green, right: 40}}>Log out</Text>
               <LogoutIcon style={{marginTop: -20}} />
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
-      </SafeAreaView> */}
+      </SafeAreaView>
     </View>
   );
 }

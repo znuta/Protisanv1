@@ -10,13 +10,14 @@ import {
 import Visa from "src/assets/icons/visa.svg";
 import CheckMark from "src/assets/icons/checkmark1.svg";
 import MasterCard from "src/assets/icons/mc_symbol.svg";
-
+import {SetupPayment} from 'src/redux/actions/payment/addCard/cardSetup'
 import KButton from "src/component/Buttons";
+import { useDispatch } from "react-redux";
 
 const AddCard = (props) => {
-  const [cardReady, setCardReady] = useState(false);
-
-  const _onChange = (form) => setCardReady(form.valid);
+  const [value, setValue] = useState({});
+const dispatch = useDispatch()
+  const _onChange = (k, v) => setValue({...value, [k]: v});
 
   return (
     <Container>
@@ -52,11 +53,16 @@ const AddCard = (props) => {
 
       <Wrapper style={{ marginTop: 30 }}>
         <KButton
+          onPress={() => {
+            dispatch(SetupPayment(value, () => {
+              
+            }))
+          }}
           text="Add Card"
           textColor="white"
           backgroundColor="#083E9E"
           textTransform="uppercase"
-          disabled={!cardReady}
+         
         />
       </Wrapper>
     </Container>

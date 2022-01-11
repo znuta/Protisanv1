@@ -24,6 +24,7 @@ import {colors, hp, wp} from 'src/config/variables';
 import Empty from 'src/component/Empty';
 import { styles, InnerContentContainer } from './styles';
 import axios from 'axios';
+import ProjectItem from 'src/component/ProjectItem';
 
 const mapStateToProps = state => {
   const {auth, proposals, demo} = state;
@@ -44,11 +45,10 @@ const mapDispatchToProps = dispatch => {
 
 function ProposalsList(props) {
   const navigation = useNavigation();
-  const {params} = props.route
+  // const {params = {}} = props.route
     const dispatch = useDispatch()
   const [isProposal, setIsProposal] = useState(true);
   const [proposals, setProposals] = useState([]);
-  const [project, setProject] = useState({});
   const [isFetching, setisFetching] = useState(false);
   const [defaultImage, setDefaultImage] = useState(
     'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80',
@@ -65,25 +65,26 @@ function ProposalsList(props) {
   };
  
   const GetProposals = () => {
-    console.log("__PARAMS__",params)
-    let uri = BASEURL + `/proposals/all/${params.id}`;
+    let uri = BASEURL + `/projects/user/${props.auth.userData.id}`;
 
     axios.get(uri, {
+     
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
         Authorization: 'Bearer' + ' ' + props.auth.token,
       },
-    }).then(res => {
-      console.log('Proposal__Data__', res.data);
-      const {proposals, project} = res.data
-      setProposals(proposals);
-      setProject(project)
-    }).catch(error => {
-      console.log('Proposal__Data__Error', error.response);
-        //props.setLoading(false);
-       
+    })
+      
+      .then(res => {
+        console.log('what i am looking forsa', res.data);
+        const {data=[]} = res.data
         setisFetching(false);
-     
+            setProposals(data);
+          
+      }).catch(error => {
+        //props.setLoading(false);
+        setisFetching(false);
+      
       });
   };
 
@@ -129,20 +130,20 @@ function ProposalsList(props) {
     var num = parseFloat(item.bid_amount);
     var amountToReceived = num - (num * .20);
       return (
-        <TouchableOpacity onPress={()=>navigation.navigate("ProposalDetail", {data: item, project, type: 'Home'})}>
+        <TouchableOpacity onPress={()=>navigation.navigate("ProposalDetail", {data: item, type: 'Home'})}>
       <ProjectCard>
         <ProposalWrap>
           <ProposalImage style={{borderRadius: 50}}>
             <Image
               source={{
-                uri: project.avatar || defaultImage,
+                uri: item.avatar || defaultImage,
               }}
               style={{...StyleSheet.absoluteFill, borderRadius: 50}}
             />
           </ProposalImage>
 
           <ProposalBody>
-            <ProposalTitle>{project.name||"None" }</ProposalTitle>
+            <ProposalTitle>{item.name||"None" }</ProposalTitle>
 
             <View
               style={{
@@ -155,7 +156,7 @@ function ProposalsList(props) {
                 renderTruncatedFooter={_renderTruncatedFooter}
                 renderRevealedFooter={_renderRevealedFooter}>
                 <DescriptionText style={{flex: 1}}>
-                  {item.cover_letter|| project.description}
+                  {item.cover_letter||item.description}
                 </DescriptionText>
               </ReadMore>
             </View>
@@ -212,7 +213,12 @@ function ProposalsList(props) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{paddingBottom: 80}}
           style={{flex: 1, paddingHorizontal: wp('4%'), paddingTop: 10}}
-          renderItem={({item, index}) => ProposalItem({item, index})}
+          renderItem={({item, index}) => {
+            return <ProjectItem onPress={() => {
+              props.saveState({ project_id: item.id })
+              props.next()
+            }} item={item} />;
+          }}
           keyExtractor={(item, index) => index.toString()}
           onRefresh={() => RefreshProposals()}
           refreshing={isFetching}

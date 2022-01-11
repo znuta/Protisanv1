@@ -165,9 +165,7 @@ export class ChatScreen extends Component {
             <Text style={{ fontSize: 18, fontWeight: "bold", color: "#FFF" }}>
               {this.props.route.params.username}
             </Text>
-            {/* <Text>
-                  {this.props.route.params.status}
-                </Text> */}
+            
           </View>
         </View>
         // </View> */}
@@ -1228,6 +1226,7 @@ export class ChatScreen extends Component {
       listenerID,
       new CometChat.MessageListener({
         onTextMessageReceived: (textMessage) => {
+          console.log("Text message received successfully", textMessage);
           if (
             textMessage.sender.uid === uid &&
             textMessage.receiverType === "user"
