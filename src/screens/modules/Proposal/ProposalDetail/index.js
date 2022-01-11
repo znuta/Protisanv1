@@ -1,8 +1,9 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
   Image,
+  ImageBackground,
   StyleSheet,
   TouchableOpacity,
   Alert,
@@ -33,26 +34,42 @@ import ListItemSeparator from 'src/component/ListItemSeparator';
 import DocumentPicker from 'react-native-document-picker'
 import moment from 'moment';
 import axios from 'axios';
+import { setLoading } from 'src/redux/actions/AuthActions';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 
 const ProjectApply = props => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const mapRef = useRef();
   const {auth} = useSelector(state => state);
   const [item, setItem] = useState({});
   const [type, setType] = useState('');
   const [items, setitems] = useState(null);
+  const [project, setProject] = useState({});
   const [isSendProposal, setSendProposal] = useState(false);
   const [defaultImage, setDefaultImage] = useState(
     'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80',
   );
+  const [value, setValue] = useState({...item});
+  const onChangeText = (key, data) => {
+    setValue({...value, [key]: data});
+  };
 const {params = {}} = props.route
   useEffect(() => {
     if (params) {
       console.log(params);
       setItem(params.data);
+      setValue({ ...value, ...params.data });
+      setProject(params.project)
       
     }
   }, [params]);
+
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.fitToSuppliedMarkers([project.id]);
+    }
+  }, [project]);
 
     const documentPicker = async () => {
 
@@ -136,37 +153,50 @@ const {params = {}} = props.route
  
 
 
-  const sendProposal = () => {
-    let uri = BASEURL + '/proposals/add';
-    const data = {
-      artisan_id: auth.userData.id,
-      protisan_id: item.user.id,
-      ...value
-    };
-    axios.post(uri,data, {
+  const acceptProposal = () => {
+    let uri = BASEURL + `/proposals/accept?project_id=${project.id}&proposal_id=${value.id}`;
+    dispatch(setLoading(true))
+    axios.post(uri, {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
         Authorization: 'Bearer' + ' ' + auth.token,
       },
     })
       .then(res => {
-       
-        Toast.show({
-          text: 'Offer Accepted',
-          buttonText: 'Continue',
-          type: 'success',
-        });
-        console.log('here3');
+        dispatch(setLoading(false))
+        navigation.goBack()
+        
+        console.log('__RES___PROPS', res);
       })
       .catch(error => {
-        console.log(error);
-        Toast.show({
-          text: 'Could not send',
-          buttonText: 'okay',
-          type: 'warning',
-        });
+        dispatch(setLoading(false))
+        console.log("__ERROR_PROPS",error);
+        
       });
   };
+
+  const declineProposal = () => {
+    let uri = BASEURL + `/proposals/${value.id}`;
+    dispatch(setLoading(true))
+    axios.delete(uri, {
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8',
+        Authorization: 'Bearer' + ' ' + auth.token,
+      },
+    })
+      .then(res => {
+        dispatch(setLoading(false))
+        navigation.goBack()
+        
+        console.log('__RES___PROPS', res);
+      })
+      .catch(error => {
+        dispatch(setLoading(false))
+        console.log("__ERROR_PROPS",error);
+        
+      });
+  };
+  
 
 
   const _renderTruncatedFooter = handlePress => {
@@ -189,10 +219,7 @@ const {params = {}} = props.route
     );
   };
 
-  const [value, setValue] = useState({...item});
-  const onChangeText = (key, data) => {
-    setValue({...value, [key]: data});
-  };
+  
   const { due_date = new Date(), bid_amount = '', cover_letter = '' } = value;
   var num = parseFloat(bid_amount);
   var amountToReceived = num - (num * .20);
@@ -223,12 +250,12 @@ const {params = {}} = props.route
       />
       <ContentContainer containerStyle={{flex: 1}}>
         <TitleSection>
-          <Title>{item.title}</Title>
+          <Title>{project.name}</Title>
         </TitleSection>
         <Row style={{marginHorizontal: wp('4%'), alignItems: 'center'}}>
           <MaterialIcons style={styles.paste_icon_style} name="content-paste" />
           <DescriptionHeader>Job Description</DescriptionHeader>
-          <TimeWrapper>{moment(item.createdAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
+          <TimeWrapper>{moment(project.createdAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
         </Row>
         <InnerContentContainer>
           {/* <Sectiontitle>Description :</Sectiontitle> */}
@@ -236,7 +263,7 @@ const {params = {}} = props.route
             <ProposalImage style={{}}>
               <Image
                 source={{
-                  uri: item && item.user ? item.user.avatar : defaultImage,
+                  uri: project && project.avatar ? project.avatar : defaultImage,
                 }}
                 style={{...StyleSheet.absoluteFill, borderRadius: 50}}
               />
@@ -247,7 +274,7 @@ const {params = {}} = props.route
                 numberOfLines={4}
                 renderTruncatedFooter={_renderTruncatedFooter}
                 renderRevealedFooter={_renderRevealedFooter}>
-                <JobDesc>{item.description}</JobDesc>
+                <JobDesc>{project.description}</JobDesc>
               </ReadMore>
               <View
                 style={{
@@ -256,7 +283,7 @@ const {params = {}} = props.route
                   flex: 1,
                 }}>
                 <FlatList
-                  data={item.skillSet}
+                  data={project.skill_set}
                   showsVerticalScrollIndicator={false}
                   showsHorizontalScrollIndicator={false}
                   bounces={false}
@@ -293,7 +320,7 @@ const {params = {}} = props.route
                       fontWeight: '500',
                       marginLeft: 7,
                     }}>
-                    {item.status || "Open"}
+                    {project.status || "Open"}
                   </Text>
                 </StatusWrap>
               </View>
@@ -319,7 +346,7 @@ const {params = {}} = props.route
                   flex: 1,
                 }}>
                 <FlatList
-                  data={item.attachments || [defaultImage,
+                  data={project.attachments || [defaultImage,
                     defaultImage,
                     defaultImage,
                     defaultImage,]}
@@ -336,7 +363,7 @@ const {params = {}} = props.route
                     <ProposalImage style={{}}>
                       <Image
                         source={{
-                          uri: item,
+                          uri: item.uri,
                         }}
                         style={{...StyleSheet.absoluteFill, borderRadius: 8}}
                       />
@@ -353,7 +380,7 @@ const {params = {}} = props.route
                       fontWeight: '300',
                       marginLeft: 7,
                     }}>
-                    {item.attachments && item.attachments.length > 3?`+${item.attachments.length}`: ''}
+                    {project.attachments && project.attachments.length > 3?`+${project.attachments.length}`: ''}
                   </Text>
                 </StatusWrap>
               </View>
@@ -373,19 +400,86 @@ const {params = {}} = props.route
 
             <ProposalBody>
               <DescriptionText>
-                {item.address_str || "No. 19 Nile Crescent, Sun City, Galadimawa, Abuja"}
+                {project.address_str || "No. 19 Nile Crescent, Sun City, Galadimawa, Abuja"}
               </DescriptionText>
             </ProposalBody>
           </ProposalWrap>
         </InnerContentContainer>
 
         <InnerContentContainer>
-          <WebView
-            style={{flex: 1, minHeight: hp('40%')}}
-            source={{
-              uri: `https://www.google.com/maps/@${item.location && item.location.longitude},${item.location && item.location.latitude}z`,
+          
+          <MapView
+        ref={mapRef}
+        provider={PROVIDER_GOOGLE}
+        style={{ flex: 1, height: hp('30%') }}
+        initialRegion={{
+          latitude: project.location && project.location.coordinates[1],
+          longitude: project.location && project.location.coordinates[0],
+          longitudeDelta: 0.05,
+         latitudeDelta: 0.05,
+        }}
+        region={{
+          latitude: project.location && project.location.coordinates[1],
+          longitude: project.location && project.location.coordinates[0],
+          longitudeDelta: 0.05,
+          latitudeDelta: 0.05,
+        }}
+        zoomEnabled={true}
+        showsUserLocation={true}
+        initialPosition={{
+          latitude: project.location && project.location.coordinates[1],
+          longitude: project.location && project.location.coordinates[0],
+          longitudeDelta: 0.05,
+          latitudeDelta: 0.05,
+        }}
+        minZoomLevel={2}>
+        
+          <Marker
+            onSelect={ ()=>{}}
+            style={{width: 400, height: 400}}
+            identifier={project.id}
+            id={project.id}
+            draggable={false}
+            coordinate={{
+              latitude: project.location && project.location.coordinates[1],
+              longitude: project.location && project.location.coordinates[0],
             }}
-          />
+          //   image={require('src/assets/marker.png')}
+          >
+           
+            <ImageBackground
+              source={require('src/assets/mark.png')}
+              style={{
+                width: 50,
+                height: 50,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Image
+                source={{ uri: project && project.avatar ? project.avatar : defaultImage,}}
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  marginBottom: 10,
+                  borderWidth: 1.5,
+                  borderColor: '#fff',
+                  shadowColor: '#7F5DF0',
+                  shadowOffset: {
+                    width: 0,
+                    height: 10,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.5,
+                  elevation: 5,
+                }}
+              />
+            </ImageBackground>
+          </Marker>
+       
+      </MapView>
         </InnerContentContainer>
 
         <InnerContentContainer>
@@ -393,12 +487,12 @@ const {params = {}} = props.route
             <View style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
               <Label>Urgency: </Label>
               <CoverLetter>
-                {item.priority ?? 'High'}{' '}
+                {project.priority ?? 'High'}{' '}
               </CoverLetter>
             </View>
             <View style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
               <Label>Payment: </Label>
-              <CoverLetter>{item.payment_mode||"Fixed"} </CoverLetter>
+              <CoverLetter>{project.payment_mode||"Fixed"} </CoverLetter>
             </View>
           </View>
 
@@ -408,7 +502,7 @@ const {params = {}} = props.route
               <CoverLetter>
                 <Text>
                   &#8358;
-                  {Number(item.budget || '40000')
+                  {Number(project.budget || '40000')
                     .toFixed(2)
                     .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
                 </Text>
@@ -416,7 +510,7 @@ const {params = {}} = props.route
             </View>
             <View style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
               <Label>Deadline: </Label>
-              <CoverLetter>{item.end_date||"Negotiable"} </CoverLetter>
+              <CoverLetter>{project.end_date||"Negotiable"} </CoverLetter>
             </View>
           </View>
 
@@ -497,7 +591,7 @@ const {params = {}} = props.route
                 // justifyContent: 'space-between',
               }}>
               <DataTimeField
-                // style={{ width: 100 }}
+                 editable = {false}
                 additionalStyle={{
                   inputGroup: {},
                   inputField: {
@@ -511,7 +605,8 @@ const {params = {}} = props.route
                 setDate={value => onChangeText('due_date', value)}
               />
 
-              <TextField
+            <TextField
+              editable = {false}
                 additionalStyle={{
                   inputGroup: {
                     marginLeft: 'auto',
@@ -521,28 +616,27 @@ const {params = {}} = props.route
                     backgroundColor: colors.layout,
                     height: wp('10%'),
                   },
-                }}
+              }}
+              
                 value={bid_amount}
                 label="Proposed Amount"
                 onChangeText={value => onChangeText('bid_amount', value)}
               />
             </View>
-            <TextArea
-              label="Cover Letter"
-              value={cover_letter}
-              additionalStyle={{
-                textArea: {
-                  backgroundColor: colors.layout,
-                  height: hp('13%'),
-                },
-              }}
-              onChangeText={value => onChangeText('cover_letter', value)}
-              placeholder="Tell me why you are the best person for the job"
-            />
+           
+          <InnerContentContainer>
+          <ReadMore
+                numberOfLines={4}
+                renderTruncatedFooter={_renderTruncatedFooter}
+                renderRevealedFooter={_renderRevealedFooter}>
+                <JobDesc>{cover_letter}</JobDesc>
+              </ReadMore>
+        </InnerContentContainer>
             <TouchableOpacity
               onPress={() => documentPicker()}
             >
             <TextField
+               editable = {false}
               additionalStyle={{
                 inputField: {
                   backgroundColor: colors.layout,
@@ -577,18 +671,36 @@ const {params = {}} = props.route
         
 
         <View style={styles.actionBox}>
-          <Button
-            text="CancelProposal"
-            type="primary"
-            additionalStyle={{
-              button: styles.button,
-              text: {fontSize: wp('3.5%')},
-            }}
-            onPress={() => {
-              setSendProposal(true);
-              sendProposal()
-            }}
-          />
+        <CTAWrap>
+              <CTAButton
+                onPress={() => {
+                  acceptProposal();
+                  console.log('accept', items);
+                  // navigation.navigate("Send Proposal", {
+                  //   item:item
+                  //   //image: artisan.image_url,
+                  // });
+                }}>
+                <Text
+                  style={{
+                    color: 'white',
+                    fontWeight: '600',
+                  }}>
+                  Accept Offer
+                </Text>
+              </CTAButton>
+              <CTAButton
+                style={{backgroundColor: Colors.primary + 15}}
+                onPress={() => declineProposal()}>
+                <Text
+                  style={{
+                    color: Colors.primary,
+                    fontWeight: '600',
+                  }}>
+                  Decline Offer
+                </Text>
+              </CTAButton>
+            </CTAWrap>
         </View>
       </ContentContainer>
     </Container>
@@ -744,10 +856,7 @@ const SecondaryBadgeText = styled.Text`
 `;
 const CTAWrap = styled.View`
   flex-direction: row;
-  position: absolute;
-  left: 10px;
-  margin-top: 50px;
-  bottom: 20px;
+ 
 `;
 
 const CTAButton = styled.TouchableOpacity`

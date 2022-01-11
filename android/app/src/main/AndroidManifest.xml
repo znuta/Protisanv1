@@ -45,6 +45,7 @@
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme">
+      <meta-data android:name="co.paystack.android.PublicKey" android:value="pk_test_1e34e9552967b1582c1a943f41473079a1ab7038"/>
       <meta-data
      android:name="com.google.android.geo.API_KEY"
      android:value="AIzaSyD2kRP3CxmIxUvxf_E2BFUeBgQlGsVsJY0"/>
@@ -59,5 +60,18 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+       <service
+    android:name=".MyFirebaseInstanceIDService">
+    <intent-filter>
+        <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+    </intent-filter>
+</service>
+<service
+    android:name=".MyFirebaseMessagingService">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+    </intent-filter>
+</service>
     </application>
+   
 </manifest>

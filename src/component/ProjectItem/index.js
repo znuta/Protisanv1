@@ -18,12 +18,13 @@ import colors from 'src/config/colors';
 import {hp, wp} from 'src/config/variables';
 
 const ProjectItem = props => {
-    let item = props.item;
+  let item = props.item;
+  
 const {onPress=()=>{}} = props
     const _renderTruncatedFooter = handlePress => {
         return (
           <Text
-            style={{color: '#000', marginTop: 5, fontWeight: '600', fontSize: 13}}
+            style={{color: '#000',  fontWeight: '600', fontSize: 13}}
             // onPress={handlePress}
           >
             {/* Read more */}
@@ -34,7 +35,7 @@ const {onPress=()=>{}} = props
       const _renderRevealedFooter = handlePress => {
         return (
           <Text
-            style={{color: '#000', marginTop: 5, fontWeight: '500', fontSize: 14}}
+            style={{color: '#000',  fontWeight: '500', fontSize: 14}}
             onPress={handlePress}>
             Show less
           </Text>
@@ -52,7 +53,7 @@ const {onPress=()=>{}} = props
       >
         <TouchableOpacity
           onPress={onPress}>
-          <ProjectTitle>{item.title}</ProjectTitle>
+          <ProjectTitle>{item.name}</ProjectTitle>
 
           <Meta>
             <DeadlineWrap>
@@ -62,7 +63,7 @@ const {onPress=()=>{}} = props
                   fontSize: wp('3.5%'),
                   color: colors.green,
                   fontWeight: '500',
-                  marginLeft: 7,
+                  // marginLeft: 7,
                 }}
               />
               <Text
@@ -74,7 +75,7 @@ const {onPress=()=>{}} = props
                 }}>
                 {/* Due Tomorrow */}
                 {/* {item.endDate} */}
-                Due <TimeAgo time={item.endDate} />
+                Due <TimeAgo time={item.end_date} />
                 {/* If deadline has passed, mark 'project as closed', set 'status to archived' and set deadline to 'Expired'  */}
               </Text>
             </DeadlineWrap>
@@ -96,7 +97,7 @@ const {onPress=()=>{}} = props
                   fontWeight: '500',
                   marginLeft: 7,
                 }}>
-                Open
+                {item.status || "Open"}
               </Text>
             </StatusWrap>
           </Meta>
@@ -126,13 +127,13 @@ const {onPress=()=>{}} = props
         <View
           style={{
             flexDirection: 'row',
-
+            marginTop: hp('1%'),
             flexWrap: 'wrap',
             width: '100%',
             flex: 1,
           }}>
           <FlatList
-            data={item.skills}
+            data={item.skill_set}
             showsVerticalScrollIndicator={false}
             showsHorizontalScrollIndicator={false}
             bounces={true}
@@ -140,7 +141,7 @@ const {onPress=()=>{}} = props
             scrollEnabled={true}
             //numColumns={2}
             horizontal={true}
-            style={{marginTop: 10, flex: 1}}
+            style={{ flex: 1}}
             // renderItem={({item}) => _renderGalleryImage}
             renderItem={({item, index}) => (
               <View style={{flex: 1, width: '100%'}}>
@@ -256,15 +257,15 @@ const {onPress=()=>{}} = props
     flex-direction: row;
     flex: 1;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-start;
   `;
   
   const Description = styled.View``;
   
   const DescriptionText = styled.Text`
-  font-size: ${wp('3%')}
+  font-size: ${wp('3.4%')}
     margin-top: ${hp('1.8%')};
-    line-height: ${hp('1.8%')};
+    line-height: ${hp('2.5%')};
     font-weight: 400;
     color: ${colors.medium};
   `;

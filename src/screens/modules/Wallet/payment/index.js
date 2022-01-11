@@ -25,14 +25,55 @@ import Flutterwave from 'src/assets/illustrations/Flutterwave.svg';
 import { Switch } from 'react-native-elements';
 import CardDetails from '../deposite/CardDetails';
 import RBSheet from 'react-native-raw-bottom-sheet';
+import { useDispatch, useSelector } from "react-redux";
+import { SetupPayment } from 'src/redux/actions/payment/addCard/cardSetup';
+import { setLoading } from 'src/redux/actions/AuthActions';
+import { BASEURL } from 'src/constants/Services';
+import axios from 'axios';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 const mock = [];
 
 const Payment = props => {
   const navigation = useNavigation();
+  const {auth} = useSelector(state=>state)
   const [checked, setchecked] = useState(false);
   const refDepositeSheet = useRef();
+  const [value, setValue] = useState({});
+  const dispatch = useDispatch()
+  const _onChange = (k, v) => setValue({ ...value, [k]: v });
+  
+  const AddPaymentApi = async (ref) => {
+
+    let uri = BASEURL + `/wallets/add-money/${auth.userData.id}`;
+   
+    let data = {
+      payment_ref: ref,
+      amount: 50/100,
+      
+    };
+
+    console.log("___PAYLOD__3",data)
+    dispatch(setLoading(true));
+    axios.post(uri, data,{
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8',
+        Authorization: 'Bearer' + ' ' + auth.token,
+      },
+    }) .then(res => {
+        console.log('Proposal sent', res);
+        dispatch(setLoading(false));
+      navigation.navigate('Home');
+        
+      })
+      .catch(error => {
+        console.log("__ERROR_RESPONSE__",error.response);
+       dispatch(setLoading(false));
+       
+      });
+  };
+
+  
   const { back, next } = props;
   const BackButton = () => {
     return (
@@ -45,7 +86,7 @@ const Payment = props => {
   };
   return (
     <View
-      style={{ paddingVertical: wp('5%'), flex: 1, backgroundColor: 'white' }}>
+      style={{ flex: 1, backgroundColor: 'white' }}>
       <StatusBar backgroundColor={colors.green} />
       <View
         style={{
@@ -187,7 +228,11 @@ const Payment = props => {
             height: '11%',
           },
         }}>
-        <CardDetails />
+        <CardDetails _onChange={_onChange} setstep={() => {
+          dispatch(SetupPayment(value, (ref) => {
+              AddPaymentApi(ref)
+          }))
+        }}  />
       </RBSheet>
     </View>
   );

@@ -32,6 +32,7 @@ import OngoingProjectDetail from 'src/screens/modules/Projects/OngoingProjectDet
 import JobOfferDetail from 'src/screens/modules/Projects/JobOfferDetail';
 import Settings from 'src/screens/modules/Settings';
 import NewProject from 'src/screens/modules/ProjectApplication';
+import Proposal from 'src/screens/modules/Proposal';
 import ProposalDetail from 'src/screens/modules/Proposal/ProposalDetail';
 import Insight from 'src/screens/modules/Insight';
 import { ChatScreen } from "src/screens/modules/Messages/ChatScreen";
@@ -51,6 +52,7 @@ import EditUser from 'src/screens/modules/EditProfile/EditUser';
 import Conversations from 'src/screens/modules/Messages/Conversations';
 import {colors, hp} from 'src/config/variables';
 import { CallingScreen } from 'src/screens/modules/Messages/CallingScreen';
+import JobOffer from 'src/screens/modules/JobOffer'
 
 
 const Tab = createBottomTabNavigator();
@@ -215,6 +217,7 @@ const BottomTabComponent = reduxProps => {
       <Stack.Screen options={{ headerShown: false }} name="Home" component={HomeTabs} />
       <Stack.Screen name="Proposal" component={ProjectApply} />
       <Stack.Screen name="NewProject" component={NewProject} />
+      <Stack.Screen name="ProposalScreen" component={Proposal} />
       <Stack.Screen name="ProposalDetail" component={ProposalDetail} />
       <Stack.Screen name="CompletedProjectDetail" component={CompletedProjectDetail} />
       <Stack.Screen name="OngoingProjectDetail" component={OngoingProjectDetail} />
@@ -232,6 +235,7 @@ const BottomTabComponent = reduxProps => {
       <Stack.Screen name="ChatScreen" component={ChatScreen} />
       <Stack.Screen name="CallingScreen" component={CallingScreen} />
       <Stack.Screen name="MainCallScreen" component={MainCallScreen} />
+      <Stack.Screen name="CreateJobOffer" component={JobOffer} />
       {/* 
      
       <Stack.Screen name="Withdrawal" component={Withdrawal} />
