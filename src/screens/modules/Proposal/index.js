@@ -226,13 +226,28 @@ function ProposalsList(props) {
       </View>
     );
   };
-
+  const BackButton = () => {
+    return (
+      <TouchableOpacity
+        style={{paddingHorizontal: 10}}
+        onPress={() => navigation.goBack()}>
+        <MaterialIcons name="arrow-back" style={styles.header_icon} />
+      </TouchableOpacity>
+    );
+  };
   return (
     <View style={{backgroundColor: '#f5f5f5', flex: 1}}>
      
         <Header
           placement="center"
           leftComponent={
+            <BackButton />
+          }
+          centerComponent={{
+            text: 'Proposals',
+            style: {color: '#fff', fontWeight: 'bold', fontSize: 16},
+          }}
+          rightComponent={
             <TouchableOpacity
               style={{
                 justifyContent: 'flex-end',
@@ -258,23 +273,6 @@ function ProposalsList(props) {
                   width: 42,
                   height: 42,
                 }}
-              />
-            </TouchableOpacity>
-          }
-          centerComponent={{
-            text: 'Proposals',
-            style: {color: '#fff', fontWeight: 'bold', fontSize: 16},
-          }}
-          rightComponent={
-            <TouchableOpacity
-              onPress={() => {
-                setIsProposal(false);
-              }}>
-              <MaterialCommunityIcons
-                name="chart-bar"
-                size={24}
-                color="white"
-                style={{opacity: 0.8}}
               />
             </TouchableOpacity>
           }
