@@ -160,7 +160,7 @@ const UserLogin = props => {
           });
           dispatch(setLoading(false));
           
-          console.log('Fetch Exception Caught...', error.response);
+          console.log('Fetch Exception Caught...', error);
          
         });
     
