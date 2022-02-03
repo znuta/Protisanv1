@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useRef } from 'react';
+import React, { useState,useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
   TextInput,
   Dimensions,
   Image,
+  FlatList,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather'
 import { colors, hp, wp } from 'src/config/variables';
@@ -30,6 +31,8 @@ import { SetupPayment } from 'src/redux/actions/payment/addCard/cardSetup';
 import { setLoading } from 'src/redux/actions/AuthActions';
 import { BASEURL } from 'src/constants/Services';
 import axios from 'axios';
+import Empty from 'src/component/Empty';
+import PaymentCard from 'src/component/PaymentCard';
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 const mock = [];
@@ -38,6 +41,8 @@ const Payment = props => {
   const navigation = useNavigation();
   const {auth} = useSelector(state=>state)
   const [checked, setchecked] = useState(false);
+  const [cards, setCards] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   const refDepositeSheet = useRef();
   const [value, setValue] = useState({});
   const dispatch = useDispatch()
@@ -72,6 +77,37 @@ const Payment = props => {
        
       });
   };
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true)
+    GetCards();
+   
+  }, []);
+  const GetCards = () => {
+    let uri = BASEURL + `/wallets/cards/${auth.userData.id}`;
+
+    dispatch(setLoading(true));
+    axios.get(uri, {
+      headers: {
+        "Content-Type": "application/json;charset=utf-8",
+        Authorization: 'Bearer' + ' ' + auth.token,
+      },
+    }).then(res => {
+       const {data} = res.data
+        console.log("___Card__History__",res);
+        setCards(data)
+        dispatch(setLoading(false));
+        
+      }).catch(error => {
+        console.log("___ERROR__Card__", error.response)
+        dispatch(setLoading(false));
+        
+      });
+  };
+
+  useEffect(()=>{
+    GetCards()
+  },[])
 
   
   const { back, next } = props;

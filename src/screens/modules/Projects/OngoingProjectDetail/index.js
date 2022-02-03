@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect,useRef} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ImageBackground,
   FlatList,
 } from 'react-native';
 import styled from 'styled-components';
@@ -33,10 +34,12 @@ import ListItemSeparator from 'src/component/ListItemSeparator';
 import DocumentPicker from 'react-native-document-picker'
 import moment from 'moment';
 import axios from 'axios';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 
 const OngoingProjectDetail = props => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const mapRef = useRef();
   const {auth} = useSelector(state => state);
   const [item, setItem] = useState({});
   const [type, setType] = useState('');
@@ -45,14 +48,26 @@ const OngoingProjectDetail = props => {
   const [defaultImage, setDefaultImage] = useState(
     'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80',
   );
+  const [value, setValue] = useState({...item});
+  const onChangeText = (key, data) => {
+    setValue({...value, [key]: data});
+  };
 const {params = {}} = props.route
   useEffect(() => {
     if (params) {
       console.log(params);
       setItem(params.data);
-      
+      const {proposal = []} = params.data
+      const newProp = proposal[0]
+      setValue({ ...value, ...newProp });
     }
   }, [params]);
+
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.fitToSuppliedMarkers([item.id]);
+    }
+  }, [item]);
 
     const documentPicker = async () => {
 
@@ -189,10 +204,7 @@ const {params = {}} = props.route
     );
   };
 
-  const [value, setValue] = useState({...item});
-  const onChangeText = (key, data) => {
-    setValue({...value, [key]: data});
-  };
+
   const { due_date = new Date(), bid_amount = '', cover_letter = '' } = value;
   var num = parseFloat(bid_amount);
   var amountToReceived = num - (num * .20);
@@ -223,7 +235,7 @@ const {params = {}} = props.route
       />
       <ContentContainer containerStyle={{flex: 1}}>
         <TitleSection>
-          <Title>{item.title}</Title>
+          <Title>{item.name}</Title>
         </TitleSection>
         <Row style={{marginHorizontal: wp('4%'), alignItems: 'center'}}>
           <MaterialIcons style={styles.paste_icon_style} name="content-paste" />
@@ -236,7 +248,7 @@ const {params = {}} = props.route
             <ProposalImage style={{}}>
               <Image
                 source={{
-                  uri: item && item.user ? item.user.avatar : defaultImage,
+                  uri: item && item.avatar ? item.avatar : defaultImage,
                 }}
                 style={{...StyleSheet.absoluteFill, borderRadius: 50}}
               />
@@ -336,7 +348,7 @@ const {params = {}} = props.route
                     <ProposalImage style={{}}>
                       <Image
                         source={{
-                          uri: item,
+                          uri: item.uri,
                         }}
                         style={{...StyleSheet.absoluteFill, borderRadius: 8}}
                       />
@@ -380,12 +392,80 @@ const {params = {}} = props.route
         </InnerContentContainer>
 
         <InnerContentContainer>
-          <WebView
-            style={{flex: 1, minHeight: hp('40%')}}
-            source={{
-              uri: `https://www.google.com/maps/@${item.location && item.location.longitude},${item.location && item.location.latitude}z`,
+        <MapView
+        ref={mapRef}
+        provider={PROVIDER_GOOGLE}
+        style={{ flex: 1, height: hp('30%') }}
+        initialRegion={{
+          latitude: item.location && item.location.coordinates[1],
+          longitude: item.location && item.location.coordinates[0],
+          longitudeDelta: 0.05,
+         latitudeDelta: 0.05,
+        }}
+        region={{
+          latitude: item.location && item.location.coordinates[1],
+          longitude: item.location && item.location.coordinates[0],
+          longitudeDelta: 0.05,
+          latitudeDelta: 0.05,
+        }}
+        zoomEnabled={true}
+        showsUserLocation={true}
+        initialPosition={{
+          latitude: item.location && item.location.coordinates[1],
+          longitude: item.location && item.location.coordinates[0],
+          longitudeDelta: 0.05,
+          latitudeDelta: 0.05,
+        }}
+        minZoomLevel={2}>
+        
+          <Marker
+            onSelect={ ()=>{}}
+            style={{width: 400, height: 400}}
+            identifier={item.id}
+            id={item.id}
+            draggable={false}
+            coordinate={{
+              latitude: item.location && item.location.coordinates[1],
+              longitude: item.location && item.location.coordinates[0],
+              longitudeDelta: 0.05,
+              latitudeDelta: 0.05,
             }}
-          />
+            image={require('src/assets/marker.png')}
+          >
+           
+            <ImageBackground
+              source={require('src/assets/mark.png')}
+              style={{
+                width: 50,
+                height: 50,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Image
+                source={{ uri: item && item.avatar ? item.avatar : defaultImage,}}
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  marginBottom: 10,
+                  borderWidth: 1.5,
+                  borderColor: '#fff',
+                  shadowColor: '#7F5DF0',
+                  shadowOffset: {
+                    width: 0,
+                    height: 10,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.5,
+                  elevation: 5,
+                }}
+              />
+            </ImageBackground>
+          </Marker>
+       
+      </MapView>
         </InnerContentContainer>
 
         <InnerContentContainer>
@@ -486,7 +566,7 @@ const {params = {}} = props.route
         </InnerContentContainer>
 
         
-          <View style={styles.actionBox}>
+        <View style={styles.actionBox}>
             <View
               style={{
                 borderRadius: 12,
@@ -497,7 +577,7 @@ const {params = {}} = props.route
                 // justifyContent: 'space-between',
               }}>
               <DataTimeField
-                // style={{ width: 100 }}
+                 editable = {false}
                 additionalStyle={{
                   inputGroup: {},
                   inputField: {
@@ -511,7 +591,8 @@ const {params = {}} = props.route
                 setDate={value => onChangeText('due_date', value)}
               />
 
-              <TextField
+            <TextField
+              editable = {false}
                 additionalStyle={{
                   inputGroup: {
                     marginLeft: 'auto',
@@ -521,28 +602,27 @@ const {params = {}} = props.route
                     backgroundColor: colors.layout,
                     height: wp('10%'),
                   },
-                }}
+              }}
+              
                 value={bid_amount}
                 label="Proposed Amount"
                 onChangeText={value => onChangeText('bid_amount', value)}
               />
             </View>
-            <TextArea
-              label="Cover Letter"
-              value={cover_letter}
-              additionalStyle={{
-                textArea: {
-                  backgroundColor: colors.layout,
-                  height: hp('13%'),
-                },
-              }}
-              onChangeText={value => onChangeText('cover_letter', value)}
-              placeholder="Tell me why you are the best person for the job"
-            />
+           
+          <InnerContentContainer>
+          <ReadMore
+                numberOfLines={4}
+                renderTruncatedFooter={_renderTruncatedFooter}
+                renderRevealedFooter={_renderRevealedFooter}>
+                <JobDesc>{cover_letter}</JobDesc>
+              </ReadMore>
+        </InnerContentContainer>
             <TouchableOpacity
               onPress={() => documentPicker()}
             >
             <TextField
+               editable = {false}
               additionalStyle={{
                 inputField: {
                   backgroundColor: colors.layout,
