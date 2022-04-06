@@ -4,7 +4,7 @@ pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 pod 'react-native-video', :path => '../node_modules/react-native-video/react-native-video.podspec'
 platform :ios, '11.0'
 
-target 'KeyedinV1' do
+target 'ProtisanV1' do
     # React Native Maps dependencies
   rn_maps_path = '../node_modules/react-native-maps'
   pod 'react-native-google-maps', :path => rn_maps_path
@@ -31,6 +31,8 @@ target 'KeyedinV1' do
   pod 'Permission-Siri', :path => "#{permissions_path}/Siri"
   pod 'Permission-SpeechRecognition', :path => "#{permissions_path}/SpeechRecognition"
   pod 'Permission-StoreKit', :path => "#{permissions_path}/StoreKit"
+  pod "Firebase/Core"
+  # pod 'react-native-paystack', :path => '../node_modules/react-native-paystack'
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -41,7 +43,7 @@ target 'KeyedinV1' do
 
   pod 'RNGestureHandler', :path => '../node_modules/react-native-gesture-handler'
 
-  target 'KeyedinV1Tests' do
+  target 'ProtisanV1Tests' do
     inherit! :complete
     # Pods for testing
   end

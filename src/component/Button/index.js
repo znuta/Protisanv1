@@ -10,16 +10,20 @@ import {
 
 import styles, { typeStyle } from './styles';
 
-const Button = props => {
-  const {
-    text,
-    icon,
-    onPress = () => { },
-    additionalStyle = {},
-    type = 'primary',
-  } = props;
+const Button = ({
+  text,
+  icon,
+  loading,
+  disabled,
+  onPress = () => { },
+  additionalStyle = {},
+  type = 'primary',
+  ...props
+}) => {
+  
   return (
     <TouchableOpacity
+    disabled={disabled}
       {...props}
       onPress={onPress}
       style={[styles.button, typeStyle[type]?.button, additionalStyle.button]}>

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect,useRef} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
+  Linking,
+  ImageBackground,
 } from 'react-native';
 import styled from 'styled-components';
 import {Header, Icon, Divider} from 'react-native-elements';
@@ -22,7 +24,7 @@ import Layout from 'src/constants/Layout';
 import {colors, fonts, hp, wp} from 'src/config/variables';
 import {BASEURL} from 'src/constants/Services';
 import {connect} from 'react-redux';
-import {styles} from './styles';
+import {InputLabel, styles} from './styles';
 import Loader from 'src/component/Loader';
 import Button from 'src/component/Button/index';
 import TextField from 'src/component/TextField';
@@ -33,10 +35,12 @@ import ListItemSeparator from 'src/component/ListItemSeparator';
 import DocumentPicker from 'react-native-document-picker'
 import moment from 'moment';
 import axios from 'axios';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 const CompletedProjectDetail = props => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const mapRef = useRef();
   const {auth} = useSelector(state => state);
   const [item, setItem] = useState({});
   const [type, setType] = useState('');
@@ -45,11 +49,18 @@ const CompletedProjectDetail = props => {
   const [defaultImage, setDefaultImage] = useState(
     'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80',
   );
+  const [value, setValue] = useState({});
+  const onChangeText = (key, data) => {
+    setValue({...value, [key]: data});
+  };
 const {params = {}} = props.route
   useEffect(() => {
     if (params) {
-      console.log(params);
+      console.log("___PARAMS",params);
+      const {proposal = []} = params.data
+     
       setItem(params.data);
+      setValue({...proposal[0]})
       
     }
   }, [params]);
@@ -189,11 +200,8 @@ const {params = {}} = props.route
     );
   };
 
-  const [value, setValue] = useState({...item});
-  const onChangeText = (key, data) => {
-    setValue({...value, [key]: data});
-  };
-  const { due_date = new Date(), bid_amount = '', cover_letter = '' } = value;
+ 
+  const { due_date = new Date(), bid_amount = '', cover_letter = '', attachment='' } = value;
   var num = parseFloat(bid_amount);
   var amountToReceived = num - (num * .20);
   return (
@@ -223,17 +231,21 @@ const {params = {}} = props.route
       />
       <ContentContainer containerStyle={{flex: 1}}>
         <TitleSection>
-          <Title>{item.title}</Title>
+          <Title>{item.name}</Title>
         </TitleSection>
         <Row style={{marginHorizontal: wp('4%'), alignItems: 'center'}}>
           <MaterialIcons style={styles.paste_icon_style} name="content-paste" />
           <DescriptionHeader>Job Description</DescriptionHeader>
-          <TimeWrapper>{moment(item.createdAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
+          <TimeWrapper>{moment(item.updatedAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
         </Row>
         <InnerContentContainer>
           {/* <Sectiontitle>Description :</Sectiontitle> */}
           <ProposalWrap>
-            <ProposalImage style={{}}>
+            <ProposalImage
+            onPress={()=>{
+              navigation.navigate('ProtisanProfile', {id: item.user_id})
+            }}
+             style={{}}>
               <Image
                 source={{
                   uri: item && item.user ? item.user.avatar : defaultImage,
@@ -256,7 +268,7 @@ const {params = {}} = props.route
                   flex: 1,
                 }}>
                 <FlatList
-                  data={item.skillSet}
+                  data={item.skill_set}
                   showsVerticalScrollIndicator={false}
                   showsHorizontalScrollIndicator={false}
                   bounces={false}
@@ -283,7 +295,7 @@ const {params = {}} = props.route
                       fontSize: wp('4%'),
                       color: colors.green,
                       fontWeight: '500',
-                      marginLeft: 7,
+                      marginLeft: wp('2%'),
                     }}
                   />
                   <Text
@@ -291,7 +303,7 @@ const {params = {}} = props.route
                       fontSize: wp('3.5%'),
                       color: colors.green,
                       fontWeight: '500',
-                      marginLeft: 7,
+                      marginLeft: wp('2%'),
                     }}>
                     {item.status || "Open"}
                   </Text>
@@ -336,7 +348,7 @@ const {params = {}} = props.route
                     <ProposalImage style={{}}>
                       <Image
                         source={{
-                          uri: item,
+                          uri: item.uri,
                         }}
                         style={{...StyleSheet.absoluteFill, borderRadius: 8}}
                       />
@@ -345,17 +357,19 @@ const {params = {}} = props.route
                   keyExtractor={(item, index) => index.toString()}
                   //ItemSeparatorComponent={ListItemSeparator}
                 />
-                <StatusWrap style={{flex: 0}}>
+                 {item.attachments && item.attachments.length > 3 &&
+                <CountWrap style={{flex: 0.2}}>
                   <Text
                     style={{
                       fontSize: wp('2.5%'),
                       color: colors.grey,
                       fontWeight: '300',
-                      marginLeft: 7,
+                      // marginLeft: 7,
                     }}>
                     {item.attachments && item.attachments.length > 3?`+${item.attachments.length}`: ''}
                   </Text>
-                </StatusWrap>
+                </CountWrap>
+               }
               </View>
             </ProposalBody>
           </ProposalWrap>
@@ -379,14 +393,81 @@ const {params = {}} = props.route
           </ProposalWrap>
         </InnerContentContainer>
 
-        <InnerContentContainer>
-          <WebView
-            style={{flex: 1, minHeight: hp('40%')}}
-            source={{
-              uri: `https://www.google.com/maps/@${item.location && item.location.longitude},${item.location && item.location.latitude}z`,
+        <MapContentContainer>
+          
+          <MapView
+        ref={mapRef}
+        provider={PROVIDER_GOOGLE}
+        style={{ flex: 1, height: hp('30%') }}
+        initialRegion={{
+          latitude: item.location && item.location.coordinates[1],
+          longitude: item.location && item.location.coordinates[0],
+          longitudeDelta: 0.05,
+         latitudeDelta: 0.05,
+        }}
+        region={{
+          latitude: item.location && item.location.coordinates[1],
+          longitude: item.location && item.location.coordinates[0],
+          longitudeDelta: 0.05,
+          latitudeDelta: 0.05,
+        }}
+        zoomEnabled={true}
+        showsUserLocation={true}
+        initialPosition={{
+          latitude: item.location && item.location.coordinates[1],
+          longitude: item.location && item.location.coordinates[0],
+          longitudeDelta: 0.05,
+          latitudeDelta: 0.05,
+        }}
+        minZoomLevel={2}>
+        
+          <Marker
+            onSelect={ ()=>{}}
+            style={{width: 400, height: 400}}
+            identifier={item.id}
+            id={item.id}
+            draggable={false}
+            coordinate={{
+              latitude: item.location && item.location.coordinates[1],
+              longitude: item.location && item.location.coordinates[0],
             }}
-          />
-        </InnerContentContainer>
+          //   image={require('src/assets/marker.png')}
+          >
+           
+            <ImageBackground
+              source={require('src/assets/mark.png')}
+              style={{
+                width: 50,
+                height: 50,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Image
+                source={{ uri: item && item.avatar ? item.avatar : defaultImage,}}
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  marginBottom: 10,
+                  borderWidth: 1.5,
+                  borderColor: '#fff',
+                  shadowColor: '#7F5DF0',
+                  shadowOffset: {
+                    width: 0,
+                    height: 10,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.5,
+                  elevation: 5,
+                }}
+              />
+            </ImageBackground>
+          </Marker>
+       
+      </MapView>
+        </MapContentContainer>
 
         <InnerContentContainer>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
@@ -485,8 +566,7 @@ const {params = {}} = props.route
           )} */}
         </InnerContentContainer>
 
-        
-          <View style={styles.actionBox}>
+        <View style={styles.actionBox}>
             <View
               style={{
                 borderRadius: 12,
@@ -498,6 +578,7 @@ const {params = {}} = props.route
               }}>
               <DataTimeField
                 // style={{ width: 100 }}
+                editable={false}
                 additionalStyle={{
                   inputGroup: {},
                   inputField: {
@@ -522,36 +603,46 @@ const {params = {}} = props.route
                     height: wp('10%'),
                   },
                 }}
+                editable={false}
                 value={bid_amount}
                 label="Proposed Amount"
                 onChangeText={value => onChangeText('bid_amount', value)}
               />
             </View>
-            <TextArea
-              label="Cover Letter"
-              value={cover_letter}
-              additionalStyle={{
-                textArea: {
-                  backgroundColor: colors.layout,
-                  height: hp('13%'),
-                },
-              }}
-              onChangeText={value => onChangeText('cover_letter', value)}
-              placeholder="Tell me why you are the best person for the job"
-            />
-            <TouchableOpacity
-              onPress={() => documentPicker()}
-            >
-            <TextField
-              additionalStyle={{
-                inputField: {
-                  backgroundColor: colors.layout,
-                },
-              }}
-              label="View Documents"
-              
-              />
-              </TouchableOpacity>
+            <InnerContentContainer>
+          <ReadMore
+                numberOfLines={4}
+                renderTruncatedFooter={_renderTruncatedFooter}
+                renderRevealedFooter={_renderRevealedFooter}>
+                <JobDesc>{cover_letter}</JobDesc>
+              </ReadMore>
+        </InnerContentContainer>
+            
+        <TouchableOpacity
+            style={{flexDirection: 'row', marginVertical: hp('1%')}}
+            onPress={() => {
+              Linking.canOpenURL(attachment).then(supported => {
+                if (supported) {
+                  Linking.openURL(attachment);
+                } else {
+                  console.log("Don't know how to open URI: " + attachment);
+                }
+              })}
+            }>
+            <View style={styles.circle}>
+              <MaterialCommunityIcons name="plus" style={styles.white_plus} />
+            </View>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text style={styles.portfolio_text}>
+                <InputLabel>Download Attachment</InputLabel> {attachment? ``: " (No attachment included.)"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+             
             <ListItemSeparator />
             <View style={{width: '100%'}}>
               <Label style={{color: colors.green, marginBottom: hp('0.3%')}}>
@@ -595,6 +686,7 @@ const {params = {}} = props.route
   );
 };
 
+
 const Container = styled.View`
   flex: 1;
   ${'' /* background-color: white; */}
@@ -614,6 +706,16 @@ min-height: ${hp('10%')}
   flex: 1;
   padding-horizontal: ${wp('4%')};
 
+  border-radius: 10px;
+  ${'' /* align-items: center; */}
+`;
+
+const MapContentContainer = styled.View`
+ 
+  background-color: #ffffff;
+  margin-vertical: ${hp('1%')};
+min-height: ${hp('10%')}
+  flex: 1;
   border-radius: 10px;
   ${'' /* align-items: center; */}
 `;
@@ -767,7 +869,7 @@ const ProposalWrap = styled.View`
   margin-vertical: ${hp('1%')};
 `;
 
-const ProposalImage = styled.View`
+const ProposalImage = styled.TouchableOpacity`
   height: ${wp('14%')};
   width: ${wp('14%')};
   background-color: #e2e0de;
@@ -803,9 +905,17 @@ const ProposalContent = styled.Text`
 `;
 
 const StatusWrap = styled.View`
-  flex: 0.4;
+  flex: 0.5;
   flex-direction: row;
   align-items: center;
+  margin-right: ${wp('5%')}
+`;
+
+const CountWrap = styled.View`
+flex: 0.25;
+  flex-direction: row;
+  align-items: center;
+  margin-right: ${wp('5%')}
 `;
 const DescriptionText = styled.Text`
 font-size: ${wp('3%')}

@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import styled from 'styled-components/native';
 import Button from 'src/component/Button';
 import Toast from 'react-native-toast-message';
+import DataTimeField from 'src/component/DataTimeField';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -125,38 +126,25 @@ const Payment = props => {
                 width: '100%',
                 flexDirection: 'row',
               }}>
-              <View style={{ flex: 0.45 }}>
-                <Text>Project start date</Text>
-                <View style={[styles.inputContainer]}>
-                  <View style={styles.nairaStyle}>
-                    <FontAwesome name="calendar" size={20} color="gray" />
-                  </View>
-                  <InputField>
-                    <TextInput
-                      onChangeText={itemValue => onChangeText('start_date', itemValue)}
-                      placeholder="2021-02-02"
-                      style={[styles.inputField]}
-                      keyboardType="phone-pad"
-                    />
-                  </InputField>
-                </View>
-              </View>
-              <View style={{ flex: 0.45 }}>
-                <Text>Project end date</Text>
-                <View style={[styles.inputContainer]}>
-                  <View style={styles.nairaStyle}>
-                    <FontAwesome name="calendar" size={20} color="gray" />
-                  </View>
-                  <InputField>
-                    <TextInput
-                      onChangeText={itemValue => onChangeText('end_date', itemValue)}
-                      placeholder="2021-02-02"
-                      style={[styles.inputField]}
-                      keyboardType="phone-pad"
-                    />
-                  </InputField>
-                </View>
-              </View>
+                
+              <DataTimeField
+            // style={{ width: 100 }}
+            duration={150}
+            date={start_date}
+            label="Project start date"
+            placeholder="select date"
+            setDate={value => onChangeText('start_date', value)}
+          />
+
+          {/* ios stop date */}
+          <DataTimeField
+            // style={{ width: 100 }}
+            duration={150}
+            date={end_date}
+            label="Project end date"
+            placeholder="select date"
+            setDate={value => onChangeText('end_date', value)}
+          />
             </View>
           </ScrollView>
           <Toast style={{position: 'absolute'}} />

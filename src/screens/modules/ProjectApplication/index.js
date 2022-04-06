@@ -17,7 +17,7 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { BASEURL } from 'src/constants/Services';
-import { setLoading } from 'src/redux/actions/AuthActions';
+import { setLoading, uploadImage } from 'src/redux/actions/AuthActions';
 
 const Steps = [
   {name: 'New', component: New},
@@ -58,9 +58,19 @@ const Auth = () => {
   };
 
   const SendProposalToApi = async (payload) => {
+    dispatch(setLoading(true));
     let uri = BASEURL + '/projects/add';
-    const { longitude = "0.0", latitude = "0.0", address_str = "Ikeja", country = "Nigeria", skill_set = "", type = "Project", profession = "Software Engineer" } = payload
+    const { longitude = "0.0", latitude = "0.0", address_str = "Ikeja", country = "Nigeria", skill_set = "", type = "Project", profession = "Software Engineer", attachments = [] } = payload
     console.log("___PAYLOD__",payload)
+const files = []
+    if (attachments.length > 0) {
+      for (let i = 0; i < attachments.length; i++) {
+        const imageUrl =  await uploadImage(attachments[i])
+          files.push(imageUrl)
+        
+      }
+
+    }
     let data = {
       ...payload,
       user_id: auth.userData.id,
@@ -76,14 +86,14 @@ const Auth = () => {
       type,
       profession,
       skill_set: Array.isArray(skill_set) ? skill_set : skill_set.split(","),
-     
+      attachments: files,
       tags: [
         "file1", "file2"
       ]
 
     };
     console.log("___PAYLOD__3",data)
-    dispatch(setLoading(true));
+   
     axios.post(uri, data,{
       headers: {
         'Content-Type': 'application/json;charset=utf-8',

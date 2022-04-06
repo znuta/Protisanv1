@@ -4,11 +4,18 @@ import {StatusBar, View, StyleSheet, Text, Button} from 'react-native';
 import {colors} from 'src/config/variables';
 import {useSelector, useDispatch} from 'react-redux';
 import Navigation from '../../../navigation/navigation';
+import Toast from 'src/component/Toast';
+import { setToast } from 'src/redux/actions/AuthActions';
 
 const SplashScreen = props => {
   const dispatch = useDispatch();
   const {auth, intro} = useSelector(state => state);
+  const {toast = {}} = auth
   const [loaded, setLoaded] = useState(false);
+
+  
+
+  
 
   useEffect(() => {
     StatusBar.setHidden(true);
@@ -16,6 +23,15 @@ const SplashScreen = props => {
       setLoaded(true);
     }, 1500);
   }, []);
+
+  useEffect(() => {
+  if (toast.show) {
+    setTimeout(() => {
+      dispatch(setToast({message:"", show: false}));
+    }, 3000);
+  }
+    
+  }, [toast]);
 
   const _completeOnboarding = () => {
     // this.props.setFirstLaunch(false);
@@ -45,6 +61,9 @@ const SplashScreen = props => {
           <IntroNav />
         )} */}
       {/* </AnimatedSplash> */}
+
+      <Toast {...toast} />
+     
     </View>
   );
 };

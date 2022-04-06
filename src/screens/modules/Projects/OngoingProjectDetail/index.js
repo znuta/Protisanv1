@@ -8,6 +8,7 @@ import {
   Alert,
   ImageBackground,
   FlatList,
+  Linking,
 } from 'react-native';
 import styled from 'styled-components';
 import {Header, Icon, Divider} from 'react-native-elements';
@@ -23,7 +24,7 @@ import Layout from 'src/constants/Layout';
 import {colors, fonts, hp, wp} from 'src/config/variables';
 import {BASEURL} from 'src/constants/Services';
 import {connect} from 'react-redux';
-import {styles} from './styles';
+import {InputLabel, styles} from './styles';
 import Loader from 'src/component/Loader';
 import Button from 'src/component/Button/index';
 import TextField from 'src/component/TextField';
@@ -205,194 +206,201 @@ const {params = {}} = props.route
   };
 
 
-  const { due_date = new Date(), bid_amount = '', cover_letter = '' } = value;
+  const { due_date = new Date(), bid_amount = '', attachment = '', cover_letter = '' } = value;
   var num = parseFloat(bid_amount);
   var amountToReceived = num - (num * .20);
   return (
     <Container>
-      <Header
-        leftComponent={<BackButton />}
-        rightComponent={<RightButton />}
-        //rightComponent={<FilterButton />}
-        centerComponent={{
-          text: 'View Offer',
-          style: {
-            fontWeight: '700',
-            fontSize: wp('5%'),
-            color: colors.white,
-          },
-        }}
-        statusBarProps={{barStyle: 'dark-content'}}
-        containerStyle={{
-          backgroundColor: 'transparent',
-          justifyContent: 'space-between',
-          borderBottomWidth: 0,
-          paddingVertical: hp('3%'),
-          backgroundColor: colors.green,
-          borderBottomLeftRadius: wp('8%'),
-          borderBottomRightRadius: wp('8%'),
-        }}
-      />
-      <ContentContainer containerStyle={{flex: 1}}>
-        <TitleSection>
-          <Title>{item.name}</Title>
-        </TitleSection>
-        <Row style={{marginHorizontal: wp('4%'), alignItems: 'center'}}>
-          <MaterialIcons style={styles.paste_icon_style} name="content-paste" />
-          <DescriptionHeader>Job Description</DescriptionHeader>
-          <TimeWrapper>{ item.createdAt ?moment(item.createdAt, "YYYYMMDD").fromNow() : "5 min ago"}</TimeWrapper>
-        </Row>
-        <InnerContentContainer>
-          {/* <Sectiontitle>Description :</Sectiontitle> */}
-          <ProposalWrap>
-            <ProposalImage style={{}}>
-              <Image
-                source={{
-                  uri: item && item.avatar ? item.avatar : defaultImage,
-                }}
-                style={{...StyleSheet.absoluteFill, borderRadius: 50}}
+    <Header
+      leftComponent={<BackButton />}
+      rightComponent={<RightButton />}
+      //rightComponent={<FilterButton />}
+      centerComponent={{
+        text: 'View Offer',
+        style: {
+          fontWeight: '700',
+          fontSize: wp('5%'),
+          color: colors.white,
+        },
+      }}
+      statusBarProps={{barStyle: 'dark-content'}}
+      containerStyle={{
+        backgroundColor: 'transparent',
+        justifyContent: 'space-between',
+        borderBottomWidth: 0,
+        paddingVertical: hp('3%'),
+        backgroundColor: colors.green,
+        borderBottomLeftRadius: wp('8%'),
+        borderBottomRightRadius: wp('8%'),
+      }}
+    />
+    <ContentContainer containerStyle={{flex: 1}}>
+      <TitleSection>
+        <Title>{item.name}</Title>
+      </TitleSection>
+      <Row style={{marginHorizontal: wp('4%'), alignItems: 'center'}}>
+        <MaterialIcons style={styles.paste_icon_style} name="content-paste" />
+        <DescriptionHeader>Job Description</DescriptionHeader>
+        <TimeWrapper>{moment(item.updatedAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
+      </Row>
+      <InnerContentContainer>
+        {/* <Sectiontitle>Description :</Sectiontitle> */}
+        <ProposalWrap>
+          <ProposalImage
+          onPress={()=>{
+            navigation.navigate('ProtisanProfile', {id: item.user_id})
+          }}
+           style={{}}>
+            <Image
+              source={{
+                uri: item && item.user ? item.user.avatar : defaultImage,
+              }}
+              style={{...StyleSheet.absoluteFill, borderRadius: 50}}
+            />
+          </ProposalImage>
+
+          <ProposalBody>
+            <ReadMore
+              numberOfLines={4}
+              renderTruncatedFooter={_renderTruncatedFooter}
+              renderRevealedFooter={_renderRevealedFooter}>
+              <JobDesc>{item.description}</JobDesc>
+            </ReadMore>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                flex: 1,
+              }}>
+              <FlatList
+                data={item.skill_set}
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
+                bounces={false}
+                decelerationRate={'normal'}
+                scrollEnabled={true}
+                //numColumns={2}
+                horizontal={true}
+                style={{marginTop: 10, flex: 1}}
+                // renderItem={({item}) => _renderGalleryImage}
+                renderItem={({item, index}) => (
+                  <View style={{flex: 1, width: '100%'}}>
+                    <SkillBadge key={index.toString()}>
+                      <BadgeText>{item}</BadgeText>
+                    </SkillBadge>
+                  </View>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                //ItemSeparatorComponent={ListItemSeparator}
               />
-            </ProposalImage>
-
-            <ProposalBody>
-              <ReadMore
-                numberOfLines={4}
-                renderTruncatedFooter={_renderTruncatedFooter}
-                renderRevealedFooter={_renderRevealedFooter}>
-                <JobDesc>{item.description}</JobDesc>
-              </ReadMore>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  flex: 1,
-                }}>
-                <FlatList
-                  data={item.skillSet}
-                  showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}
-                  bounces={false}
-                  decelerationRate={'normal'}
-                  scrollEnabled={true}
-                  //numColumns={2}
-                  horizontal={true}
-                  style={{marginTop: 10, flex: 1}}
-                  // renderItem={({item}) => _renderGalleryImage}
-                  renderItem={({item, index}) => (
-                    <View style={{flex: 1, width: '100%'}}>
-                      <SkillBadge key={index.toString()}>
-                        <BadgeText>{item}</BadgeText>
-                      </SkillBadge>
-                    </View>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                  //ItemSeparatorComponent={ListItemSeparator}
+              <StatusWrap>
+                <Feather
+                  name="info"
+                  style={{
+                    fontSize: wp('4%'),
+                    color: colors.green,
+                    fontWeight: '500',
+                    marginLeft: wp('2%'),
+                  }}
                 />
-                <StatusWrap>
-                  <Feather
-                    name="info"
-                    style={{
-                      fontSize: wp('4%'),
-                      color: colors.green,
-                      fontWeight: '500',
-                      marginLeft: 7,
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: wp('3.5%'),
-                      color: colors.green,
-                      fontWeight: '500',
-                      marginLeft: 7,
-                    }}>
-                    {item.status || "Open"}
-                  </Text>
-                </StatusWrap>
-              </View>
-            </ProposalBody>
-          </ProposalWrap>
+                <Text
+                  style={{
+                    fontSize: wp('3.5%'),
+                    color: colors.green,
+                    fontWeight: '500',
+                    marginLeft: wp('2%'),
+                  }}>
+                  {item.status || "Open"}
+                </Text>
+              </StatusWrap>
+            </View>
+          </ProposalBody>
+        </ProposalWrap>
 
-          <ProposalWrap>
-            <MaterialCommunityIcons
-              name="paperclip"
+        <ProposalWrap>
+          <MaterialCommunityIcons
+            name="paperclip"
+            style={{
+              fontSize: wp('6%'),
+              color: colors.grey,
+              fontWeight: '500',
+              marginLeft: wp('10%'),
+            }}
+          />
+
+          <ProposalBody>
+            <View
               style={{
-                fontSize: wp('6%'),
-                color: colors.grey,
-                fontWeight: '500',
-                marginLeft: wp('10%'),
-              }}
-            />
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                flex: 1,
+              }}>
+              <FlatList
+                data={item.attachments || [defaultImage,
+                  defaultImage,
+                  defaultImage,
+                  defaultImage,]}
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
+                bounces={false}
+                decelerationRate={'normal'}
+                scrollEnabled={true}
+                //numColumns={2}
+                horizontal={true}
+                style={{marginTop: 10, flex: 1}}
+                // renderItem={({item}) => _renderGalleryImage}
+                renderItem={({item, index}) => (
+                  <ProposalImage style={{}}>
+                    <Image
+                      source={{
+                        uri: item.uri,
+                      }}
+                      style={{...StyleSheet.absoluteFill, borderRadius: 8}}
+                    />
+                  </ProposalImage>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                //ItemSeparatorComponent={ListItemSeparator}
+              />
+               {item.attachments && item.attachments.length > 3 &&
+              <CountWrap style={{flex: 0.2}}>
+                <Text
+                  style={{
+                    fontSize: wp('2.5%'),
+                    color: colors.grey,
+                    fontWeight: '300',
+                    // marginLeft: 7,
+                  }}>
+                  {item.attachments && item.attachments.length > 3?`+${item.attachments.length}`: ''}
+                </Text>
+              </CountWrap>
+             }
+            </View>
+          </ProposalBody>
+        </ProposalWrap>
 
-            <ProposalBody>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  flex: 1,
-                }}>
-                <FlatList
-                  data={item.attachments || [defaultImage,
-                    defaultImage,
-                    defaultImage,
-                    defaultImage,]}
-                  showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}
-                  bounces={false}
-                  decelerationRate={'normal'}
-                  scrollEnabled={true}
-                  //numColumns={2}
-                  horizontal={true}
-                  style={{marginTop: 10, flex: 1}}
-                  // renderItem={({item}) => _renderGalleryImage}
-                  renderItem={({item, index}) => (
-                    <ProposalImage style={{}}>
-                      <Image
-                        source={{
-                          uri: item.uri,
-                        }}
-                        style={{...StyleSheet.absoluteFill, borderRadius: 8}}
-                      />
-                    </ProposalImage>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                  //ItemSeparatorComponent={ListItemSeparator}
-                />
-                <StatusWrap style={{flex: 0}}>
-                  <Text
-                    style={{
-                      fontSize: wp('2.5%'),
-                      color: colors.grey,
-                      fontWeight: '300',
-                      marginLeft: 7,
-                    }}>
-                    {item.attachments && item.attachments.length > 3?`+${item.attachments.length}`: ''}
-                  </Text>
-                </StatusWrap>
-              </View>
-            </ProposalBody>
-          </ProposalWrap>
+        <ProposalWrap>
+          <MaterialIcons
+            name="location-pin"
+            style={{
+              fontSize: wp('3.5%'),
+              color: colors.grey,
+              fontWeight: '500',
+              marginLeft: wp('10%'),
+            }}
+          />
 
-          <ProposalWrap>
-            <MaterialIcons
-              name="location-pin"
-              style={{
-                fontSize: wp('3.5%'),
-                color: colors.grey,
-                fontWeight: '500',
-                marginLeft: wp('10%'),
-              }}
-            />
+          <ProposalBody>
+            <DescriptionText>
+              {item.address_str || "No. 19 Nile Crescent, Sun City, Galadimawa, Abuja"}
+            </DescriptionText>
+          </ProposalBody>
+        </ProposalWrap>
+      </InnerContentContainer>
 
-            <ProposalBody>
-              <DescriptionText>
-                {item.address_str || "No. 19 Nile Crescent, Sun City, Galadimawa, Abuja"}
-              </DescriptionText>
-            </ProposalBody>
-          </ProposalWrap>
-        </InnerContentContainer>
-
-        <InnerContentContainer>
-        <MapView
+      <MapContentContainer>
+          
+          <MapView
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1, height: hp('30%') }}
@@ -427,10 +435,8 @@ const {params = {}} = props.route
             coordinate={{
               latitude: item.location && item.location.coordinates[1],
               longitude: item.location && item.location.coordinates[0],
-              longitudeDelta: 0.05,
-              latitudeDelta: 0.05,
             }}
-            image={require('src/assets/marker.png')}
+          //   image={require('src/assets/marker.png')}
           >
            
             <ImageBackground
@@ -466,7 +472,8 @@ const {params = {}} = props.route
           </Marker>
        
       </MapView>
-        </InnerContentContainer>
+        </MapContentContainer>
+
 
         <InnerContentContainer>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
@@ -500,73 +507,11 @@ const {params = {}} = props.route
             </View>
           </View>
 
-          {/* {type == 'Home' && (
-            <CTAWrap>
-              <CTAButton
-                onPress={() => {
-                  navigation.navigate('Send Proposal', {
-                    item: item,
-                    from: 'Home',
-                    //image: artisan.image_url,
-                  });
-                }}>
-                <Text
-                  style={{
-                    color: 'white',
-                    fontWeight: '600',
-                  }}>
-                  Send Proposal
-                </Text>
-              </CTAButton>
-              <CTAButton
-                style={{backgroundColor: Colors.primary + 15}}
-                onPress={() => _handleRejectProposal()}>
-                <Text
-                  style={{
-                    color: Colors.primary,
-                    fontWeight: '600',
-                  }}>
-                  Decline Job
-                </Text>
-              </CTAButton>
-            </CTAWrap>
-          )}
-          {type == 'Offer' && (
-            <CTAWrap>
-              <CTAButton
-                onPress={() => {
-                  _handleAcceptance(items.id);
-                  console.log('accept', items.id);
-                  // navigation.navigate("Send Proposal", {
-                  //   item:item
-                  //   //image: artisan.image_url,
-                  // });
-                }}>
-                <Text
-                  style={{
-                    color: 'white',
-                    fontWeight: '600',
-                  }}>
-                  Accept Offer
-                </Text>
-              </CTAButton>
-              <CTAButton
-                style={{backgroundColor: Colors.primary + 15}}
-                onPress={() => _handleReject(item.id)}>
-                <Text
-                  style={{
-                    color: Colors.primary,
-                    fontWeight: '600',
-                  }}>
-                  Decline Offer
-                </Text>
-              </CTAButton>
-            </CTAWrap>
-          )} */}
+         
         </InnerContentContainer>
 
         
-        <View style={styles.actionBox}>
+          <View style={styles.actionBox}>
             <View
               style={{
                 borderRadius: 12,
@@ -577,7 +522,8 @@ const {params = {}} = props.route
                 // justifyContent: 'space-between',
               }}>
               <DataTimeField
-                 editable = {false}
+                // style={{ width: 100 }}
+                editable={false}
                 additionalStyle={{
                   inputGroup: {},
                   inputField: {
@@ -591,8 +537,7 @@ const {params = {}} = props.route
                 setDate={value => onChangeText('due_date', value)}
               />
 
-            <TextField
-              editable = {false}
+              <TextField
                 additionalStyle={{
                   inputGroup: {
                     marginLeft: 'auto',
@@ -602,15 +547,14 @@ const {params = {}} = props.route
                     backgroundColor: colors.layout,
                     height: wp('10%'),
                   },
-              }}
-              
+                }}
+                editable={false}
                 value={bid_amount}
                 label="Proposed Amount"
                 onChangeText={value => onChangeText('bid_amount', value)}
               />
             </View>
-           
-          <InnerContentContainer>
+            <InnerContentContainer>
           <ReadMore
                 numberOfLines={4}
                 renderTruncatedFooter={_renderTruncatedFooter}
@@ -618,20 +562,33 @@ const {params = {}} = props.route
                 <JobDesc>{cover_letter}</JobDesc>
               </ReadMore>
         </InnerContentContainer>
-            <TouchableOpacity
-              onPress={() => documentPicker()}
-            >
-            <TextField
-               editable = {false}
-              additionalStyle={{
-                inputField: {
-                  backgroundColor: colors.layout,
-                },
-              }}
-              label="View Documents"
-              
-              />
-              </TouchableOpacity>
+            
+        <TouchableOpacity
+        disabled={!attachment}
+            style={{flexDirection: 'row', marginVertical: hp('1%')}}
+            onPress={() => {
+              Linking.canOpenURL(attachment).then(supported => {
+                if (supported) {
+                  Linking.openURL(attachment);
+                } else {
+                  console.log("Don't know how to open URI: " + attachment);
+                }
+              })}
+            }>
+            <View style={styles.circle}>
+              <MaterialCommunityIcons name="plus" style={styles.white_plus} />
+            </View>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text style={styles.portfolio_text}>
+                <InputLabel>Download Attachment</InputLabel> {attachment? ``: " (No attachment included.)"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+             
             <ListItemSeparator />
             <View style={{width: '100%'}}>
               <Label style={{color: colors.green, marginBottom: hp('0.3%')}}>
@@ -653,10 +610,8 @@ const {params = {}} = props.route
                 {amountToReceived||"N38,000"}
               </DescriptionText>
             </View>
-          </View>
-        
 
-        <View style={styles.actionBox}>
+            <View style={styles.actionBox}>
         <CTAWrap>
               <CTAButton
                 onPress={() => {
@@ -690,6 +645,10 @@ const {params = {}} = props.route
               </CTAButton>
             </CTAWrap>
         </View>
+          </View>
+        
+
+        
       </ContentContainer>
     </Container>
   );
@@ -698,6 +657,23 @@ const {params = {}} = props.route
 const Container = styled.View`
   flex: 1;
   ${'' /* background-color: white; */}
+`;
+
+const MapContentContainer = styled.View`
+ 
+  background-color: #ffffff;
+  margin-vertical: ${hp('1%')};
+min-height: ${hp('10%')}
+  flex: 1;
+  border-radius: 10px;
+  ${'' /* align-items: center; */}
+`;
+
+const CountWrap = styled.View`
+flex: 0.25;
+  flex-direction: row;
+  align-items: center;
+  margin-right: ${wp('5%')}
 `;
 
 const ContentContainer = styled.ScrollView`
@@ -864,7 +840,7 @@ const ProposalWrap = styled.View`
   margin-vertical: ${hp('1%')};
 `;
 
-const ProposalImage = styled.View`
+const ProposalImage = styled.TouchableOpacity`
   height: ${wp('14%')};
   width: ${wp('14%')};
   background-color: #e2e0de;

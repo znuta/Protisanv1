@@ -19,12 +19,13 @@ import {
   SET_LOCATION,
   SET_EDUCATION_DETAILS,
   SET_EXPERIENCE_DETAILS,
+  SET_TOAST
 } from 'src/redux/action-types';
 import {BASEURL} from 'src/constants/Services';
 import {CometChat} from '@cometchat-pro/react-native-chat';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import storage from '@react-native-firebase/storage';
 
  export const getToken = async () => {
   try {
@@ -125,6 +126,12 @@ const setLoading = status => {
   return {
     type: SET_LOADING,
     status: status,
+  };
+};
+const setToast = ({ show= false, type= "", message= "", title= "", callback}) => {
+  return {
+    type: SET_TOAST,
+    payload: { show, type, message, title, callback},
   };
 };
 const saveId = (_id) => {return { type: SAVE_ID, _id: _id }}
@@ -903,13 +910,72 @@ const getArtisanEducation = async (id, callback) => async dispatch => {
      
     });
 };
+
+const GetPortfolio = async(id, callback) => {
+  console.log("___ID__++", id)
+  let uri = BASEURL + `/portfolio/${id}`;
+  const token = await getToken()
+  //props.setLoading(true);
+  axios.get(uri, {
+    headers: {
+      "Content-Type": "application/json;charset=utf-8",
+      Authorization: 'Bearer' + ' ' + token,
+    },
+  }).then(res => {
+
+    console.log('__RES_Portfolio__', res);
+    const { data = {} } = res.data
+    callback(data,null)
+  
+    })
+    .catch(error => {
+      callback(null,error)
+      console.log("___ERROR__Portifolio@", error.response)
+     
+    });
+};
 const saveAvatar= path => async dispatch =>{
       dispatch({
         type: SAVE_AVATAR,
         filepath: path,
       })}
 
+      const uploadImage = async (payload) => {
+        console.log("____FIL?E__")
+        try {
+          const { uri } = payload;
+        const filename = uri.substring(uri.lastIndexOf('/') + 1);
+        const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+    
+        // setUploading(true);
+        // setTransferred(0);
+    
+        const reference = storage().ref(filename);
+         await reference.putFile(uploadUri);
+         let downloadURL = await reference.getDownloadURL()
+         return downloadURL
+        // task.on('state_changed', snapshot =>  {
+        //   // setTransferred(
+        //   //   Math.round(snapshot.bytesTransferred / snapshot.totalBytes) * 10000
+        //   // );
+        // });
+        // let downloadURL = "";
+        // task.then( () => {
+        //     downloadURL =  reference.getDownloadURL();
+        //   console.log("____FILE___URL___", downloadURL)
+        // }).catch((e) => console.log('uploading image error => ', e));
+        } catch (error) {
+          console.log("___IMAGE__UPLOAD___ERROR__", error)
+        }
+        
+    
+        
+      };
+
 export {
+  uploadImage,
+  setToast,
+  GetPortfolio,
   GetArtisanExperience,
 getArtisanExpertise,
 getArtisanEducation,

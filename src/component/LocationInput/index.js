@@ -22,8 +22,6 @@ const LocationInput = ({
   editable = true,
   multiline = false,
   label,
-
-  ...otherProps
 }) => {
 
     const autocomplete = {
@@ -34,7 +32,7 @@ const LocationInput = ({
         },
         textInputContainer: {
           flexDirection: "row",
-          zindex: 100000
+        
         },
         textInput: {
           // backgroundColor: colors.green,
@@ -45,7 +43,7 @@ const LocationInput = ({
           fontSize: 15,
           flex: 1,
           backgroundColor: '#f2f3f4',
-          zindex: 100000
+         
         },
         poweredContainer: {
           justifyContent: "flex-end",
@@ -54,13 +52,12 @@ const LocationInput = ({
           borderBottomLeftRadius: 5,
           borderColor: "#c8c7cc",
           borderTopWidth: 0.5,
-          zindex: 100000
+        
           
         },
         powered: {},
       listView: {
-        height: 500,
-        zindex: 100000
+       
         },
         row: {
           backgroundColor: "#FFFFFF",
@@ -93,23 +90,22 @@ const LocationInput = ({
               returnKeyType={"default"}
               fetchDetails={true}
               listViewDisplayed={false}
-              enablePoweredByContainer={true}
+              // enablePoweredByContainer={true}
               styles={{ ...autocomplete }}
               onPress={(data, details = null) => {
-               
+                console.log("___LOCATION__", details)
                 handleLocationAddress(data, details);
               }}
-                  fetchDetails={true}
+            
                   
               query={{
-                key: "AIzaSyD2kRP3CxmIxUvxf_E2BFUeBgQlGsVsJY0",
+                key: "AIzaSyB3x6J22pFG24tVkU_GguqIaqEIHU9joso",
                 language: "en",
                 // type: "geocode",
               }}
               currentLocation={true}
               currentLocationLabel="Current location"
-        autoFocus={true}
-        {...otherProps}
+            
       />
      
       

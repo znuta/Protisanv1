@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Image,
   View,
@@ -17,7 +17,7 @@ import Homebtnalt from 'src/assets/icons/homebtnalt.svg';
 import Projectbtn from 'src/assets/icons/projectbtn.svg';
 import Projectbtnalt from 'src/assets/icons/projectbtnalt.svg';
 
-import Plusbtn from 'src/assets/icons/plus.svg';
+import Plusbtn from 'src/assets/icons/plus01.svg';
 
 import Messagebtn from 'src/assets/icons/messagebtn.svg';
 import Messagebtnalt from 'src/assets/icons/messagebtnalt.svg';
@@ -53,6 +53,8 @@ import Conversations from 'src/screens/modules/Messages/Conversations';
 import {colors, hp} from 'src/config/variables';
 import { CallingScreen } from 'src/screens/modules/Messages/CallingScreen';
 import JobOffer from 'src/screens/modules/JobOffer'
+import { CometChat } from '@cometchat-pro/react-native-chat';
+import { getUser } from 'src/redux/actions/AuthActions';
 
 
 const Tab = createBottomTabNavigator();
@@ -82,6 +84,85 @@ function InsightScreen() {
 }
 
 export function HomeTabs({navigation, route}) {
+
+  useEffect(()=>{
+    addCallListner()
+  },[])
+
+  const addCallListner = () =>{
+    var listnerID = "CHAT_SCREEN_CALL_LISTNER";
+  
+    CometChat.addCallListener(
+      listnerID,
+      new CometChat.CallListener({
+        onIncomingCallReceived(call) {
+          console.log("___CALL__HOME__LOG", call);
+          getUser(call.receiverId,({user = {}, expertise = {}, employment = {},education = {},comments = {}, rating=""})=>{
+
+            const defaultLayout = 1;
+            const isOutgoing = false;
+           navigation.navigate("CallingScreen", {
+              call: call,
+              enableDefaultLayout: defaultLayout,
+              isOutgoingCall: isOutgoing,
+              entity: call.getCallInitiator(),
+              entityType: "user",
+              acceptedFrom: "Chat",
+              callType: call.type,
+              userObject: user
+            });
+
+          })
+         
+        },
+      //   onOutgoingCallAccepted(call) {
+      //     console.log('Incoming Call Accepted__NAV_', call);
+      //   //   setCallObject(call)
+      //   // startCall();
+      //   getUser(call.receiverId,({user = {}, expertise = {}, employment = {},education = {},comments = {}, rating=""})=>{
+
+      //     const defaultLayout = 1;
+      //     const isOutgoing = true;
+      //   //  navigation.reset("CallingScreen", {
+      //   //     call: call,
+      //   //     enableDefaultLayout: defaultLayout,
+      //   //     isOutgoingCall: isOutgoing,
+      //   //     outgoingCallAccepted: true,
+      //   //     entity: call.getCallInitiator(),
+      //   //     entityType: "user",
+      //   //     acceptedFrom: "Chat",
+      //   //     callType: call.type,
+      //   //     userObject: user
+      //   //   });
+
+
+      //     navigation.dispatch(
+      //       CommonActions.reset({
+      //         index: 1,
+      //         routes: [
+      //           {
+      //             name: 'CallingScreen',
+      //             params: {
+      //               call: call,
+      //               enableDefaultLayout: defaultLayout,
+      //               isOutgoingCall: isOutgoing,
+      //               outgoingCallAccepted: true,
+      //               entity: call.getCallInitiator(),
+      //               entityType: "user",
+      //               acceptedFrom: "Chat",
+      //               callType: call.type,
+      //               userObject: user
+      //             },
+      //           },
+      //         ],
+      //       })
+      //     );
+
+      //   })
+      // },
+      })
+    );
+  }
 
 
   return (

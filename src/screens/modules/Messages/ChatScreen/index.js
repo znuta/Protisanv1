@@ -11,7 +11,9 @@ import {
   TouchableHighlight,
   Modal,
     ActivityIndicator,
-    Text
+    Text,
+    SafeAreaView
+    
 } from "react-native";
 import { CometChat } from "@cometchat-pro/react-native-chat";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -32,6 +34,8 @@ import Image from "react-native-image-progress";
 import Colors from "src/constants/Colors";
 import { Header, Icon } from "react-native-elements";
 import {colors, fonts, hp, wp} from 'src/config/variables';
+import { getUser } from "src/redux/actions/AuthActions";
+
 
 let uid, messagelist, typingNotification, status, myUserID, username, avatar;
 
@@ -103,11 +107,14 @@ export class ChatScreen extends Component {
       autoScroll: true,
       uid: "",
       username: "",
+      status:"",
+      avatar:"",
       fullimage: "",
       isModalVisible: false,
       keyboardOffset: 0,
       showModal: false,
       ismediasent: false,
+      userObject: {}
     };
     this.sendMessage = this.sendMessage.bind(this);
     this.sendMediaMessage = this.sendMediaMessage.bind(this);
@@ -122,14 +129,15 @@ export class ChatScreen extends Component {
   }
  
   componentWillMount() {
-    this.props.navigation.setParams({ initiateCall: this.initiateCall });
+    this.props.navigation.setParams({ initiateCall: this.initiateCall() });
     this.props.navigation.setParams({ navigation: this.props.navigation });
-    this.uid = this.props.route.params.uid;
-    this.username = this.props.route.params.username;
-    this.status = this.props.route.params.status;
-    this.avatar = this.props.route.params.avatar;
+    // this.uid = this.props.route.params.uid;
+    // this.username = this.props.route.params.username;
+    // this.status = this.props.route.params.status;
+    // this.avatar = this.props.route.params.avatar;
     const { route } = this.props;
-    this.setState({ uid: route.params.uid, username: route.params.username });
+    const { uid= "", username= "",status="",avatar=""} = route.params
+    this.setState({ uid, username, status, avatar  });
    
     var limit = 10;
     // this.messagesRequest = new CometChat.MessagesRequestBuilder().setLimit(limit).setUID(uid).build();
@@ -138,7 +146,7 @@ export class ChatScreen extends Component {
     
     this.messagelist;
     this.addUserListner();
-    this.addCallListner();
+    // this.addCallListner();
     this.keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
       this._keyboardDidShow
@@ -165,7 +173,9 @@ export class ChatScreen extends Component {
             <Text style={{ fontSize: 18, fontWeight: "bold", color: "#FFF" }}>
               {this.props.route.params.username}
             </Text>
-            
+            {/* <Text>
+                  {this.props.route.params.status}
+                </Text> */}
           </View>
         </View>
         // </View> */}
@@ -202,6 +212,11 @@ export class ChatScreen extends Component {
   }
   componentDidMount() {
     console.log("ARTISAN___MESSAGE++++", { uid: this.state.uid, })
+    getUser(this.state.uid,({user = {}, expertise = {}, employment = {},education = {},comments = {}, rating=""})=>{
+      console.log("ARTISAN___MESSAGE++++", user)
+    this.setState({userObject: user})
+
+    })
   this.fetchMessages();
 }
   toggleModal = () => {
@@ -220,113 +235,115 @@ export class ChatScreen extends Component {
     CometChat.removeMessageListener("CHAT_SCREEN_MESSAGE_LISTENER");
   }
 
-  static navigationOptions = ({ navigation }) => {
-    // console.log(navigation);
 
-    uid = this.state.uid;
+  
+  // static navigationOptions = ({ navigation }) => {
+  //   // console.log(navigation);
 
-    username = this.props.route.params.username;
+  //   uid = this.state.uid;
 
-    status = this.props.route.params.status;
+  //   username = this.props.route.params.username;
 
-    avatar = this.props.route.params.avatar;
+  //   status = this.props.route.params.status;
 
-    const { state } = navigation;
-    // console.log("navigation state")
-    // console.log(navigation);
-    return {
-      headerTitle: (
-        <View style={{ flex: 1 }}>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignSelf: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              {avatar === "user" ? (
-                <FontAwesome
-                  style={[
-                    {
-                      height: 48,
-                      width: 48,
-                      borderRadius: 24,
-                      marginRight: 16,
-                    },
-                  ]}
-                  name="user"
-                  size={48}
-                  color="#fff"
-                />
-              ) : (
-                <Image
-                  style={{
-                    height: 48,
-                    width: 48,
-                    borderRadius: 24,
-                    marginRight: 16,
-                  }}
-                  source={{ uri: avatar }}
-                />
-              )}
+  //   avatar = this.props.route.params.avatar;
 
-              <View style={{ alignSelf: "flex-start" }}>
-                <Text
-                  style={{ fontSize: 20, fontWeight: "bold", color: "#FFF" }}
-                >
-                  {username}
-                </Text>
+  //   const { state } = navigation;
+  //   // console.log("navigation state")
+  //   // console.log(navigation);
+  //   return {
+  //     headerTitle: (
+  //       <View style={{ flex: 1 }}>
+  //         <View
+  //           style={{ flexDirection: "row", justifyContent: "space-between" }}
+  //         >
+  //           <View
+  //             style={{
+  //               flexDirection: "row",
+  //               alignSelf: "center",
+  //               justifyContent: "space-between",
+  //             }}
+  //           >
+  //             {avatar === "user" ? (
+  //               <FontAwesome
+  //                 style={[
+  //                   {
+  //                     height: 48,
+  //                     width: 48,
+  //                     borderRadius: 24,
+  //                     marginRight: 16,
+  //                   },
+  //                 ]}
+  //                 name="user"
+  //                 size={48}
+  //                 color="#fff"
+  //               />
+  //             ) : (
+  //               <Image
+  //                 style={{
+  //                   height: 48,
+  //                   width: 48,
+  //                   borderRadius: 24,
+  //                   marginRight: 16,
+  //                 }}
+  //                 source={{ uri: avatar }}
+  //               />
+  //             )}
 
-                <Text
-                  style={{ fontSize: 15, fontStyle: "italic", color: "#FFF" }}
-                >
-                  {state.params.title}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      ),
-      headerRight: (
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row" }}>
-            <TouchableOpacity
-              onPress={() => {
-                state.params.initiateCall(CometChat.CALL_TYPE.VIDEO, state.params.navigation);
-              }}
-            >
-              <MaterialCommunityIcons
-                style={{ padding: 8 }}
-                name="video"
-                size={32}
-                color="white"
-              />
-            </TouchableOpacity>
+  //             <View style={{ alignSelf: "flex-start" }}>
+  //               <Text
+  //                 style={{ fontSize: 20, fontWeight: "bold", color: "#FFF" }}
+  //               >
+  //                 {username}
+  //               </Text>
 
-            <TouchableOpacity
-              onPress={() => {
-                state.params.initiateCall(CometChat.CALL_TYPE.AUDIO, state.params.navigation);
-              }}
-            >
-              <MaterialCommunityIcons
-                style={{ padding: 8 }}
-                name="phone"
-                size={32}
-                color="white"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      ),
-      headerStyle: {
-        backgroundColor: "#3f51b5",
-      },
-      headerTintColor: "#fff",
-    };
-  };
+  //               <Text
+  //                 style={{ fontSize: 15, fontStyle: "italic", color: "#FFF" }}
+  //               >
+  //                 {state.params.title}
+  //               </Text>
+  //             </View>
+  //           </View>
+  //         </View>
+  //       </View>
+  //     ),
+  //     headerRight: (
+  //       <View style={{ flex: 1 }}>
+  //         <View style={{ flexDirection: "row" }}>
+  //           <TouchableOpacity
+  //             onPress={() => {
+  //               state.params.initiateCall(CometChat.CALL_TYPE.VIDEO, state.params.navigation);
+  //             }}
+  //           >
+  //             <MaterialCommunityIcons
+  //               style={{ padding: 8 }}
+  //               name="video"
+  //               size={32}
+  //               color="white"
+  //             />
+  //           </TouchableOpacity>
+
+  //           <TouchableOpacity
+  //             onPress={() => {
+  //               state.params.initiateCall(CometChat.CALL_TYPE.AUDIO, state.params.navigation);
+  //             }}
+  //           >
+  //             <MaterialCommunityIcons
+  //               style={{ padding: 8 }}
+  //               name="phone"
+  //               size={32}
+  //               color="white"
+  //             />
+  //           </TouchableOpacity>
+  //         </View>
+  //       </View>
+  //     ),
+  //     headerStyle: {
+  //       backgroundColor: "#3f51b5",
+  //     },
+  //     headerTintColor: "#fff",
+  //   };
+  // };
 
   initiateCall = (type) => {
     var callType = CometChat.CALL_TYPE.VIDEO;
@@ -347,8 +364,12 @@ export class ChatScreen extends Component {
             isOutgoingCall: isOutgoing,
             entity: user,
             entityType: CometChat.RECEIVER_TYPE.USER,
+            userObject: this.state.userObject
           });
         }
+      },
+      error => {
+        console.log("Call initialization failed with exception:", error);
       });
     });
   };
@@ -356,6 +377,7 @@ export class ChatScreen extends Component {
   getLoggedInUser() {
     CometChat.getLoggedinUser().then(
       (user) => {
+        console.log("___cometuser__",user)
         myUserID = user.uid;
       },
       (error) => {
@@ -744,7 +766,7 @@ export class ChatScreen extends Component {
       new CometChat.CallListener({
         onIncomingCallReceived(call) {
           const defaultLayout = 1;
-          const isOutgoing = 0;
+          const isOutgoing = false;
           that.props.navigation.navigate("CallingScreen", {
             call: call,
             enableDefaultLayout: defaultLayout,
@@ -752,8 +774,15 @@ export class ChatScreen extends Component {
             entity: call.getCallInitiator(),
             entityType: "user",
             acceptedFrom: "Chat",
+            callType: call.type,
+            userObject: this.state.userObject
           });
         },
+        onOutgoingCallAccepted(call) {
+          console.log('Incoming Call Accepted__Chat_', call);
+        //   setCallObject(call)
+        // startCall();
+      },
       })
     );
   }
@@ -970,7 +999,7 @@ export class ChatScreen extends Component {
 
     const rightComponent = () => {
       return (
-        <View style={{ flexDirection: 'row', justifyContent: "flex-end", alignItems: "center", width: wp('100%') }}>
+        <View style={{ flexDirection: 'row',   alignSelf: "flex-end", justifyContent: "flex-end", alignItems: "center",  }}>
           <View style={{alignItems: "flex-end"}}>
             <Text style={{ color: colors.white, fontSize: wp('5%'), fontWeight: '700' }}>{ this.state.username }</Text>
             <Text style={{color: colors.white,fontSize: wp('3%')}}>5:03PM GMT</Text>
@@ -987,7 +1016,8 @@ export class ChatScreen extends Component {
             onPress={() => {
               //navigation.openDrawer();
               //Keyboard.dismiss();
-              navigation.navigate("Profile");
+              // navigation.navigate("Profile");
+              this.props.navigation.goBack()
             }}
           >
             {/* <EntypoIcon name="menu" size={27} style={{}} /> */}
@@ -1008,7 +1038,13 @@ export class ChatScreen extends Component {
                         padding: 8,
                       }}
             onPress={() => {
-              this.props.navigation.navigate("CallingScreen",{enableDefaultLayout: true, isOutgoingCall: true,entity: {name: 'user', status: '', avatar: "", uid: 'oo',},call: {sessionId: 'oo',callReceiver:{name: 'Atunde', avatar: ''}}, entityType:'', acceptedFrom: 'atundearisekola'});
+              this.props.navigation.navigate("CallingScreen",
+              {enableDefaultLayout: true, 
+                callType: CometChat.CALL_TYPE.AUDIO,
+                 isOutgoingCall: true, 
+                 userObject: this.state.userObject,
+                 entity: {name: 'user',username: this.state.username, status: this.state.status, avatar: this.state.avatar, uid: this.state.uid,},
+                  entityType:''});
               }}
             >
                 <Feather
@@ -1024,8 +1060,15 @@ export class ChatScreen extends Component {
                         alignItems: "center",
                         padding: 8,
                       }}
-            onPress={() => {
-              }}
+                      onPress={() => {
+                        this.props.navigation.navigate("CallingScreen",
+                        {enableDefaultLayout: true,
+                           callType: CometChat.CALL_TYPE.VIDEO,
+                           isOutgoingCall: true, 
+                           userObject: this.state.userObject,
+                           entity: {name: 'user',username: this.state.username, status: this.state.status, avatar: this.state.avatar, uid: this.state.uid,},
+                            entityType:''});
+                        }}
             >
                 <Feather
                     name="video"
@@ -1040,10 +1083,12 @@ export class ChatScreen extends Component {
     }
     return (
       <KeyboardAwareView animated={true}>
-        <Header
+        {/* <Header
         placement="center"
           leftComponent={
-          <View>
+            () => {
+              return (
+          <View >
             <TouchableOpacity
             style={{
             justifyContent: "flex-end",
@@ -1063,8 +1108,9 @@ export class ChatScreen extends Component {
                   />
               </TouchableOpacity>
               </View>
+              )}
               }
-        
+             
           rightComponent={ rightComponent}
         barStyle={"light-content"}
         containerStyle={{
@@ -1075,7 +1121,54 @@ export class ChatScreen extends Component {
           borderBottomLeftRadius:30,
           borderBottomRightRadius:30
         }}
-      />
+      /> */}
+       <SafeAreaView
+        style={{
+          backgroundColor: colors.green,
+          zIndex: 900000000,
+          borderBottomRightRadius: wp('10%'),
+          borderBottomLeftRadius: wp('10%'),
+          flexDirection: "row",
+        }}>
+        <View
+          style={{
+            backgroundColor: 'transparent',
+           flex: 1,
+            flexDirection: "row",
+            paddingVertical: hp('2%'),
+            paddingHorizontal: hp('1%'),
+            borderBottomRightRadius: wp('10%'),
+          borderBottomLeftRadius: wp('10%'),
+          }}>
+          
+            <TouchableOpacity
+            style={{
+            justifyContent: "flex-end",
+            alignItems: "center", 
+            alignSelf: 'flex-start',
+                padding: 8,    
+                marginRight: 'auto'
+            
+            }}
+              onPress={() => {
+              this.props.navigation.goBack()
+            }}
+            >
+                <Feather
+                    name="arrow-left"
+                    size={24}
+                    color="white"
+                    style={{ opacity: 0.8,  }}
+                  />
+              </TouchableOpacity>
+           
+
+              {rightComponent()}
+          
+            
+        </View>
+        
+      </SafeAreaView>
         <PreviewModal
           showmodal={this.state.showModal}
           onClose={() => this.setState({ showModal: false, mediaMsg: "" })}
@@ -1084,39 +1177,7 @@ export class ChatScreen extends Component {
         />
         <View style={styles.container}>
           <FlatList
-            data={this.state.messages.length ? this.state.messages : [{
-              id: "ll",
-              category: 'message',
-              type: 'text',
-              receiverId: 'jjj',
-
-
-              data: {
-                text: `Alright then.. How about we set up a milestone for the project and we can get started`
-              }
-            },{
-              id: "ll",
-              category: 'message',
-              type: 'text',
-                receiverId: 'oo',
-                readAt: new Date(),
-
-
-              data: {
-                text: `Alright then.. How about we set up a milestone for the project and we can get started `
-              }
-            },{
-              id: "ll",
-              category: 'message',
-              type: 'text',
-                receiverId: 'jjj',
-               
-
-
-              data: {
-                text: "Hello how far"
-              }
-            },]}
+            data={this.state.messages.length ? this.state.messages : []}
             renderItem={this.renderItem}
             extraData={this.state.messages}
             keyExtractor={(item) => item.id}
@@ -1226,7 +1287,6 @@ export class ChatScreen extends Component {
       listenerID,
       new CometChat.MessageListener({
         onTextMessageReceived: (textMessage) => {
-          console.log("Text message received successfully", textMessage);
           if (
             textMessage.sender.uid === uid &&
             textMessage.receiverType === "user"
@@ -1326,6 +1386,7 @@ export class ChatScreen extends Component {
   }
 
   sendMessage() {
+    console.log("____LOGMM?s",this.state.uid)
     var receiverType = CometChat.RECEIVER_TYPE.USER;
     console.log(receiverType);
     var textMessage = new CometChat.TextMessage(

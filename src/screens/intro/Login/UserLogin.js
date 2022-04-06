@@ -9,6 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   ScrollView,
+  Platform,
 } from 'react-native';
 import {
   Title,
@@ -17,11 +18,11 @@ import {
 } from 'src/screens/intro/styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
+import messaging from '@react-native-firebase/messaging';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useSelector, useDispatch} from 'react-redux';
-import {BASEURL} from 'src/constants/Services';
+import {BASEURL, CometAppID, CometAuthKey} from 'src/constants/Services';
 import Loader from 'src/component/Loader';
 import {CometChat} from '@cometchat-pro/react-native-chat';
 import colors from 'src/config/colors';
@@ -34,6 +35,7 @@ import {
   saveToken,
   completeRegistration,
   sendUserDetails,
+  setToast,
   // setIsAuthenticated
   
 } from 'src/redux/actions/AuthActions';
@@ -41,10 +43,14 @@ import styles from './style';
 import axios from 'axios';
 import TextField from 'src/component/TextField';
 import Toast from 'react-native-toast-message';
+import { privacyModalActive, setLocation, termsModalActive } from 'src/redux/actions/AuthActions';
+import TermsModal from 'src/component/TermsModal';
+import PrivacyModal from 'src/component/PrivacyModal';
+import { checkPermission, getFCMToken } from 'src/redux/actions/Notification';
 const UserLogin = props => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {auth} = useSelector(state => state);
+  const {auth,ui} = useSelector(state => state);
   let _passwordinput = useRef();
   let [email, setEmail] = useState('');
   let [password, setPassword] = useState('');
@@ -53,7 +59,7 @@ const UserLogin = props => {
   let [isRegistraionSuccess, setIsRegistraionSuccess] = useState(false);
   const [terms, setTerms] = useState(false);
   const [passwordReveal, setPasswordReveal] = useState(true);
-
+  var topics = [];
   const checkEmptyInput = () => {
     if (firstname == '' || firstname == undefined) {
       alert('Please fill in your name');
@@ -77,19 +83,48 @@ const UserLogin = props => {
     dispatch(setLoading(false));
   }, []);
 
+
+  const sendFcmToken = async (id,authToken) => {
+    try {
+    
+      const token_permission = await checkPermission();
+     if (token_permission) {
+      const token = await getFCMToken()
+      if (token) {
+        await AsyncStorage.setItem("notification_token", token)
+        const res=  await axios.put(`${BASEURL}/users/device/${id}`, {device_token:token}, {
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: 'Bearer' + ' ' + authToken,
+          }});
+       }
+     }
+      
+        
+      
+    } catch (err) {
+      //Do nothing
+      console.log("DEVICE_TOKEN___ERROR___",err);
+      return;
+    }
+  };
+
+
+  
   const login = () => {
     let uri = BASEURL + '/auth/login';
   
     //const apikey = "73dc1cb067c39b8b3026859320a668770e064e2c";
-    const apikey = 'b68cf77ff29b7ceb92944466e64d3d6e4ed256d6';
+    const apikey = '9b276d509004d11955a380f29c65058679429862';
     let data = {
       email: email,
       password: password,
       role: 'protisan'
     };
-
+    
+    
     dispatch(setLoading(true));
-
+    
     
       //console.log("Sending Login Data: ", data);
       axios.post(uri, data).then(res => {
@@ -100,21 +135,24 @@ const UserLogin = props => {
           first_name = '',
           last_name = '',
           id = '',
+          avatar = ''
         } = data;
         let fullname = first_name + ' ' + last_name;
         let uid = id;
+         sendFcmToken(id,data.token)
         var user = new CometChat.User(uid.toString());
+        user.setAvatar(avatar)
         user.setName(fullname);
-        CometChat.createUser(user, apikey).then(
+        CometChat.createUser(user, CometAuthKey).then(
           user => {
             console.log('Chat account created: ', user);
-            dispatch(setLoading(false));
-            AsyncStorage.setItem("token", data.token)
-            props.next();
+            // dispatch(setLoading(false));
+            // AsyncStorage.setItem("token", data.token)
+            // props.next();
           },
           error => {
             console.log('Error creating chat account: ', error.response);
-            dispatch(setLoading(false));
+            // dispatch(setLoading(false));
           },
         );
         
@@ -123,10 +161,24 @@ const UserLogin = props => {
                 if(!user){
             CometChat.login(
               data.id,
-              apikey,
+              CometAuthKey,
             ).then(
               user => {
+               user.setAvatar(avatar)
                 console.log('Chat login successful: ', {user});
+                let isIOS = Platform.OS === 'ios';
+                var userTopic = CometAppID + "_user_" + user.getUid();
+                if(isIOS){
+                  var userTopicIos = userTopic + "_ios";
+                  topics.push(userTopicIos);
+                }else{
+									var userTopicIos = userTopic + "_notification";
+                  topics.push(userTopic);
+                }
+                topics.forEach(async topic => {
+                  console.log('subscribing to topic => ', topic);
+                  await messaging.subscribeToTopic(topic);
+                });
               },
               error => {
                 console.log('Chat login failed with exception: ', {error});
@@ -139,11 +191,12 @@ const UserLogin = props => {
           console.log("Something went wrong", error);
         }
             );
-            Toast.show({
-              type: 'success',
-              text1: 'Login Success',
-              text2: 'Welcome back 👋'
-            });
+            // Toast.show({
+            //   type: 'success',
+            //   text1: 'Login Success',
+            //   text2: 'Welcome back 👋'
+            // });
+            dispatch(setToast({ show: true, type: "success", message: "Welcome back 👋, it's great seeing you back here!!", title: "Login Success"}));
             dispatch(saveToken(data.token));
             dispatch(sendUserDetails(data))
             // dispatch(setIsAuthenticated(true));
@@ -153,14 +206,15 @@ const UserLogin = props => {
          
         })
         .catch(error => {
-          Toast.show({
-            type: 'error',
-            text1: 'Login failed',
-            text2: 'Error with credential'
-          });
+          // Toast.show({
+          //   type: 'error',
+          //   text1: 'Login failed',
+          //   text2: 'Error with credential'
+          // });
+          dispatch(setToast({ show: true, type: "error", message: "There is a problem signing you in !!!", title: "Login failed"}));
           dispatch(setLoading(false));
           
-          console.log('Fetch Exception Caught...', error);
+          console.log('Fetch Exception Caught...', error.response);
          
         });
     
@@ -193,7 +247,8 @@ const UserLogin = props => {
       <TouchableOpacity
         style={styles.header_left}
         onPress={() => navigation.goBack()}>
-        <MaterialIcons name="arrow-back" style={styles.header_icon} />
+
+        <MaterialIcons name="close" style={styles.header_icon} />
       
       </TouchableOpacity>
     );
@@ -234,6 +289,7 @@ const UserLogin = props => {
               />}
               onChangeText={uemail => setEmail(uemail)}
               placeholder="Enter Email"
+              placeholderTextColor="#C9CFD2"
               keyboardType="email-address"
               autoCapitalize="none"
               ref={ref => {
@@ -320,7 +376,9 @@ const UserLogin = props => {
               style={{marginTop: 20, marginBottom: 0, alignItems: 'center'}}>
               <Text
                 style={{color: colors.green, fontWeight: 'bold'}}
-                onPress={() => navigation.navigate('ForgotPassword')}>
+                onPress={() =>{ 
+                  navigation.navigate('ForgotPassword')
+                  }}>
                 Forgotten Password ?
               </Text>
               <Text style={styles.agreement}>
@@ -334,14 +392,14 @@ const UserLogin = props => {
                 button, you agree to our
                 <Text
                   style={{color: colors.green, fontWeight: 'bold'}}
-                  onPress={() => navigation.navigate('GetStarted')}>
+                  onPress={() => dispatch(privacyModalActive(true))}>
                   {' '}
                   Terms of use
                 </Text>{' '}
                 and
                 <Text
                   style={{color: colors.green, fontWeight: 'bold'}}
-                  onPress={() => navigation.navigate('GetStarted')}>
+                  onPress={() => dispatch(termsModalActive(true))}>
                   {' '}
                   Privacy Policy
                 </Text>
@@ -363,7 +421,8 @@ const UserLogin = props => {
           </View>
         </ScrollView>
       </KeyboardAwareView>
-
+      <PrivacyModal visible={ui.privacyModalActive} />
+      <TermsModal visible={ui.termsModalActive} />
       {/* </Footer> */}
     </View>
   );

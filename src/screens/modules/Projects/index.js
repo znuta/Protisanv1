@@ -54,12 +54,15 @@ function ProjectsList(props) {
 
   useEffect(() => {
     const {auth, projects} = props;
-    (async () => {
-    GetJobOffers();
-    GetOngoingJobs();
-    GetCompletedJobs();
+    const loadData = async  () => {
+     
+      await  GetJobOffers();
+      await GetOngoingJobs();
+     await  GetCompletedJobs();
+      
+       };
    
-    })();
+       loadData()
   }, []);
 
   const RefreshJobOffers = () => {
@@ -79,7 +82,7 @@ function ProjectsList(props) {
     return setActiveSegment(index);
   };
 
-  const GetJobOffers = () => {
+  const GetJobOffers = async () => {
     props.setLoading(true)
     let uri = BASEURL + `/projects/user/${props.auth.userData.id}`;
 
@@ -94,10 +97,11 @@ function ProjectsList(props) {
       .then(res => {
         console.log('what i am looking forsa', res.data);
         const { data = [] } = res.data
-        props.setLoading(false)
-        setisFetching(false);
+       
+       
             setProposals(data);
-          
+            props.setLoading(false)
+            setisFetching(false);
       }).catch(error => {
         props.setLoading(false);
         setisFetching(false);
@@ -106,8 +110,9 @@ function ProjectsList(props) {
   };
 
   const GetOngoingJobs = async () => {
-    props.setLoading(true)
+    
     let uri = BASEURL + `/projects/all/status?user_id=${props.auth.userData.id}&status=ongoing`;
+    props.setLoading(true)
      axios.get(uri, {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
@@ -130,8 +135,9 @@ function ProjectsList(props) {
   };
 
   const GetCompletedJobs = async () => {
-    props.setLoading(true)
+    
     let uri = BASEURL + `/projects/all/status?status=completed&user_id=${props.auth.userData.id}`;
+    props.setLoading(true)
    axios.get(uri, {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
@@ -151,12 +157,12 @@ function ProjectsList(props) {
       });
   };
 
-  const renderProjects = () => {
+  const RenderProjects = () => {
   
     return (
-      <ProjectsWrap>
+    
 
-        {activeSegment == 1 ? (
+        activeSegment == 1 ? (
           <FlatList
             data={jobOngoing}
             showsVerticalScrollIndicator={false}
@@ -198,31 +204,27 @@ function ProjectsList(props) {
               }
             />
           </>
-        )}
-      </ProjectsWrap>
+        )
+     
     );
   };
 
-  const AllProjects = () => {
-    return (
-      <Animatable.View style={{flex: 1}} animation="fadeInLeft">
-        <ProjectsContainer
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{paddingBottom: 30}}>
-          {renderProjects()}
-        </ProjectsContainer>
-      </Animatable.View>
-    );
-  };
+  // const AllProjects = () => {
+  //   return (
+     
+  //         renderProjects()
+       
+  //   );
+  // };
 
   const Proposals = () => {
     return (
-      <Animatable.View style={{flex: 1}} animation="fadeInLeft">
+     
         <FlatList
           data={proposals}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{paddingBottom: 80}}
-          style={{flex: 1, paddingHorizontal: wp('4%')}}
+         
+          style={{flex: 1, }}
           renderItem={({item, index}) => {
             return <ProjectItem onPress={()=>navigation.navigate("JobOfferDetail", {data: item, type: 'Home'})} item={item} />;
           }}
@@ -236,7 +238,7 @@ function ProjectsList(props) {
             />
           }
         />
-       </Animatable.View>
+      
     );
   };
 
@@ -262,7 +264,7 @@ function ProjectsList(props) {
             }}>
             <Image
               source={{
-                uri: props.auth.avatar,
+                uri: props.auth.userData.avatar,
                 
               }}
               style={{
@@ -335,11 +337,11 @@ function ProjectsList(props) {
         />
       </View>
 
-      <Wrapper>
-        <View style={{flex: 1}}>
-          {activeSegment == 0 ? <Proposals /> : <AllProjects />}
+    
+        <View style={{flex: 1, marginTop: hp('2%')}}>
+          {activeSegment == 0 ? <Proposals /> : < RenderProjects />}
         </View>
-      </Wrapper>
+     
     </View>
   );
 }
@@ -384,7 +386,7 @@ const ProjectsContainer = styled.ScrollView`
 `;
 
 const ProjectsWrap = styled.View`
-padding-horizontal: ${wp('4%')}
+
 `;
 
 const ProjectCard = styled.View`

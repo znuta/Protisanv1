@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState,useRef, useEffect} from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,8 @@ import {
   StatusBar,
   Platform,
   SafeAreaView,
+  ScrollView,
+  ImageBackground,
 } from 'react-native';
 import styled from 'styled-components';
 
@@ -52,7 +54,15 @@ import {
   sendExpert,
   saveAvatar,
   GetExpertiseFromApi,
+  GetPortfolio,
+  uploadImage,
+  getUser,
+  sendEducationDetails,
+  sendWorkDetails,
+  sendUserDetails,
+  saveToken,
 } from 'src/redux/actions/AuthActions';
+import ReviewItem from 'src/component/ReviewItem';
 
 
 const SCREEN_HEIGHT = Layout.window.height;
@@ -76,9 +86,12 @@ const images = {
 function ArtisanProfile(props) {
   const navigation = useNavigation();
   const dispatch = useDispatch()
+  const { auth  } = useSelector(state => state);
+  const {expertise = {}, userData = {}} = auth
   // const [reviews, setReviews] = useState(REVIEWS);
   const [reviewart, setReviewart] = useState('');
   const [activeGallery, setActiveGallery] = useState(null);
+  const [portfolio, setPortfolio] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [videoVisible, setVideoVisible] = useState(false);
   const [artisan, setArtisan] = useState({});
@@ -86,16 +99,16 @@ function ArtisanProfile(props) {
   const [preimage, setPreimage] = useState({});
   const [imchange, setImchange] = useState(true);
   const [expertises, setExpertises] = useState({});
-  const [videoUrl, setvideoUrl] = useState('');
+  const [videoUrl, setvideoUrl] = useState(userData.video || 'https://vjs.zencdn.net/v/oceans.mp4');
   const [rating, setRating] = useState({});
+  const [jobsuccess, setJobSuccess] = useState({});
   const [jobInsight, setJobInsight] = useState({});
   const [average_rating, setAverage_rating] = useState('');
   const [quality, setQuality] = useState('');
-  const [reviewsd, setReviewsd] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [view, setView] = useState({});
-  const { auth  } = useSelector(state => state);
-  const {expertise = {}} = auth
-  
+ 
+  const [play, setPlay] = useState(true)
   const defaultImg =
     'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80';
   
@@ -108,11 +121,32 @@ function ArtisanProfile(props) {
     const art = artisan.reviews ?? 0;
     setReviewart(art);
     //console.log(portfolio);
-    GetProfile();
-    dispatch(GetExpertiseFromApi(auth.userData.id))
-    GetRating();
-    GetInsights();
-    GetArtisanReview();
+    // GetProfile();
+    // dispatch(GetExpertiseFromApi(auth.userData.id))
+    // GetRating();
+    // GetInsights();
+    // GetArtisanReview();
+    getUser(auth.userData.id, ({user = {}, expertise = {}, employment = {},education = {},comments = {}, rating="", job_success_rate={}}) => {
+      console.log("___USER___LOG__+", user)
+      setArtisan(user);
+      dispatch(sendUserDetails(user))
+      setExpertises(expertise)
+      dispatch(sendWorkDetails(employment.organizations))
+      dispatch(sendExpert(expertise))
+      dispatch(sendEducationDetails(education.institutions));
+      setReviews(comments)
+      setRating(rating);
+      setJobSuccess(job_success_rate)
+    });
+   
+    GetPortfolio(auth.userData.id,(res,err)=>{
+      if (err !== null) {
+        
+      }else{
+        console.log("___PORTFOLIO___LOG__+", res)
+        setPortfolio(res)
+      }
+    })
     // setLoading(false);
   }, []);
 
@@ -153,7 +187,7 @@ function ArtisanProfile(props) {
     let {saveAvatar} = props;
     // const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
     let status = null
-    if (Platform.OS === 'ios' && status === 'active') {
+    if (Platform.OS === 'ios' ) {
       const permission = await request(PERMISSIONS.IOS.CAMERA)
       status = permission.status
 
@@ -162,9 +196,7 @@ function ArtisanProfile(props) {
       status = permission.status
     }
    
-    if (status != 'granted') {
-      alert('You did not grant KeyedIn the permission');
-    } else {
+   
       try {
         let result = await launchImageLibrary({
           mediaType: 'video',
@@ -172,16 +204,39 @@ function ArtisanProfile(props) {
           aspect: [4, 3],
           quality: 0.4,
           //allowsMultipleSelection: false,
-          base64: true,
+         
+          includeBase64: true
         });
         if (!result.cancelled) {
-          console.log('duration');
+          console.log('___duration____',result);
           const duration = Math.round(result.duration / 1000);
+          const {assets} = result
           if (duration > 30) {
             alert('This video is more than 30 seconds');
           } else {
-            setvideoUpload(result);
-            UploadVideoApi(result);
+
+            Alert.alert('Upload', 'Are you sure you want to upload this video ?', [
+              {
+                text: 'Cancel',
+                onPress: () => {
+                  console.log('cancel logout');
+                },
+                style: 'cancel',
+              },
+              {
+                text: 'Yes',
+                onPress: async () => {
+                  try {
+                   
+                    UploadVideoApi(assets[0]);
+                  } catch (error) {
+                    console.log("___LOG___EROR_SYS__", error)
+                  }
+                 
+                },
+              },
+            ]);
+           
             
           }
           
@@ -190,34 +245,39 @@ function ArtisanProfile(props) {
       } catch (E) {
         console.log(E);
       }
-    }
+    
   };
 
-  const UploadVideoApi = item => {
-    let uri = BASEURL + `/media/user/${auth.userData.id}`;
+  const UploadVideoApi = async (item) => {
+   dispatch(setLoading(true));
+    const imageUrl =  await uploadImage(item)
+    setvideoUpload(imageUrl);
+    let uri = BASEURL + `/media/user/media/${auth.userData.id}`;
     setVideoVisible(false);
 
     //const { status } = await Permissions.askAsync(Permissio);
 
     let data = {
-      video: item,
+      video: imageUrl,
     };
-    setLoading(true);
-    axios.post(uri, JSON.stringify(data),{
+   
+    axios.put(uri, data,{
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
-        Authorization: 'Bearer' + ' ' + auth.userData.token,
+        Authorization: 'Bearer' + ' ' + auth.token,
       },
     })
       .then(res => {
-        console.log('Look here', res.data); 
+        console.log('___VIDEO__UPLOAD', res.data); 
+        setArtisan({...artisan, video: imageUrl });
+        dispatch(sendUserDetails({...artisan, video: imageUrl }))
          dispatch(setLoading(false));
           setVideoVisible(false);
          
       })
       .catch(error => {
-        setLoading(false);
-        console.log('first', error);
+        dispatch(setLoading(false));
+        console.log('___VIDEO__UPLOAD__FAILED__', error);
        
       });
 
@@ -226,21 +286,18 @@ function ArtisanProfile(props) {
 
  
   const _pickPortfolio = async () => {
-    const {saveGovId} = props;
 
     try {
       let result = await launchImageLibrary({
         mediaType: 'photo',
         aspect: [4, 3],
         quality: 0.4,
-        base64: true,
+        includeBase64: true,
       });
       if (!result.cancelled) {
-        AddPortfoliod(
-          `data:${result.type}/${
-            result.uri.split('.')[result.uri.split('.').length - 1]
-          };base64,${result.base64}`,
-        );
+        const { uri, type, base64, fileName, fileSize, width, height } = result.assets[0]
+        const file = {uri, type, base64,name:fileName , size:fileSize, width, height }
+        AddPortfoliod(file);
       }
 
     } catch (E) {
@@ -262,14 +319,9 @@ function ArtisanProfile(props) {
       .then(res => {
         //GetPortfolio();
         const { data = {} } = res.data
-        dispatch({type: 'API_PORTFOLIO_DATA', data:data.portfolio})
-        dispatch(saveAvatar(
-          res.data.image ??
-            'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
-        ));
-        if (res.data.profile_video != null) {
-          setvideoUrl(res.data.data.profile_video);
-        }
+        console.log('Profile___', res);
+       
+        setvideoUrl(data.user.video);
        
       })
       .catch(error => {
@@ -321,23 +373,23 @@ function ArtisanProfile(props) {
   };
 
   const DeletePortfolio = id => {
-    let uri = BASEURL + `/artisan/portfolio/${id}`;
+    let uri = BASEURL + `/portfolio/${id}`;
     //setLoading(true);
     axios.delete(uri, {
      
-      //body: JSON.stringify(data),
       headers: {
         "Content-Type": "application/json;charset=utf-8",
         Authorization: 'Bearer' + ' ' + auth.token,
       },
     })
-      
       .then(res => {
-        console.log({res});
-        GetProfile();
-      })
-      .then(rest => {
-        setArtisanImg(auth.avatar);
+        GetPortfolio(auth.userData.id,(res,err)=>{
+          if (err !== null) {
+            
+          }else{
+            setPortfolio(res)
+          }
+        })
        
       })
       .catch(error => {
@@ -347,7 +399,7 @@ function ArtisanProfile(props) {
   };
 
   const GetArtisanReview = () => {
-    let uri = BASEURL + '/artisan/reviews';
+    let uri = BASEURL + `/ratings/${auth.userData.id}`;
 
     setLoading(true);
     axios.get(uri, {
@@ -356,71 +408,67 @@ function ArtisanProfile(props) {
         Authorization: 'Bearer' + ' ' + auth.token,
       },
     }).then(res => {
-        console.log('Look here again', res);
-        if (res && res.data.length) {
-          setReviewsd(res.data);
-        }
+        console.log('__GET_REVIEWS__RES', res);
+        const {data=[]} = res.data
+          setReviews(data);
+
       })
       .catch(error => {
+        console.log('__GET_REVIEWS__ERROR', error);
         setLoading(false);
       });
   };
 
-  const GetPortfolio = () => {
-    let uri = BASEURL + `/artisan/portfolio/`;
+  // const GetPortfolio = () => {
+  //   let uri = BASEURL + `/portfolio/${auth.userData.id}`;
 
-    //setLoading(true);
-    axios(uri, {
+  //   //setLoading(true);
+  //   axios.get(uri, {
+  //     headers: {
+  //       "Content-Type": "application/json;charset=utf-8",
+  //       Authorization: 'Bearer' + ' ' + auth.token,
+  //     },
+  //   })
      
-      //body: JSON.stringify(data),
-      headers: {
-        //"Content-Type": "application/json;charset=utf-8",
-        Authorization: 'Bearer' + ' ' + auth.token,
-      },
-    })
-     
-      .then(res => {
+  //     .then(res => {
         
-        console.log('This is the portfolio', res.data);
-        if (res.data.error) {
-          alert('error');
-        } else {
-          const { data = {} } = res.data
-          dispatch({type: 'API_PORTFOLIO_DATA', data:data.portfolio})
-        }
-      })
-      .catch(error => {
-        //setLoading(false);
+  //       console.log('This is the portfolio', res.data);
+  //         const { data = {} } = res.data
+  //         dispatch({type: 'API_PORTFOLIO_DATA', data:data.portfolio})
+       
+  //     })
+  //     .catch(error => {
+  //       //setLoading(false);
   
-      });
-  };
+  //     });
+  // };
 
-  const _pickAvatar = async () => {
-    let {saveAvatar} = props;
-    try {
-      let result = await launchImageLibrary({
-        mediaType: 'photo',
-        //allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.4,
-        //allowsMultipleSelection: false,
-        base64: true,
-      });
-      if (!result.cancelled) {
-        // console.log(detectFaces(result.uri));
+  // const _pickAvatar = async () => {
+  //   let {saveAvatar} = props;
+  //   try {
+  //     let result = await launchImageLibrary({
+  //       mediaType: 'photo',
+  //       //allowsEditing: true,
+  //       aspect: [4, 3],
+  //       quality: 0.4,
+  //       //allowsMultipleSelection: false,
+  //       base64: true,
+  //     });
+  //     if (!result.cancelled) {
+  //       // console.log(detectFaces(result.uri));
 
-        saveAvatar(result.uri);
-        UploadAvatarToApi(
-          `data:${result.type}/${
-            result.uri.split('.')[result.uri.split('.').length - 1]
-          };base64,${result.base64}`,
-        );
-      }
-      //console.log(Object.keys(result));
-    } catch (E) {
-      console.log(E);
-    }
-  };
+  //       saveAvatar(result.uri);
+  //       UploadAvatarToApi(
+  //         `data:${result.type}/${
+  //           result.uri.split('.')[result.uri.split('.').length - 1]
+  //         };base64,${result.base64}`,
+  //       );
+  //     }
+  //     //console.log(Object.keys(result));
+  //   } catch (E) {
+  //     console.log(E);
+  //   }
+  // };
 
   const _handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout ?', [
@@ -436,7 +484,8 @@ function ArtisanProfile(props) {
         onPress: () => {
           console.log('do logout');
         
-
+          dispatch(saveToken(null));
+          dispatch(sendUserDetails({}))
           navigation.navigate('AuthNav');
 
           //setLoading(true);
@@ -448,58 +497,80 @@ function ArtisanProfile(props) {
 
  
 
-  const UploadAvatarToApi = text => {
-    let uri = BASEURL + `/media/user/${auth.userData.id}`;
-    let data = {
-      image: text,
-    };
-    setLoading(true);
-    axios.post(uri, data,{
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-        Authorization: 'Bearer' + ' ' + auth.token,
-      },
-    }).then(res => {
-        console.log({res});
-        setLoading(false);
+  // const UploadAvatarToApi = text => {
+  //   let uri = BASEURL + `/media/user/${auth.userData.id}`;
+  //   let data = {
+  //     image: text,
+  //   };
+  //   setLoading(true);
+  //   axios.post(uri, data,{
+  //     headers: {
+  //       'Content-Type': 'application/json;charset=utf-8',
+  //       Authorization: 'Bearer' + ' ' + auth.token,
+  //     },
+  //   }).then(res => {
+  //       console.log({res});
+  //       setLoading(false);
         
-      }) .catch(error => {
-        setLoading(false);
+  //     }) .catch(error => {
+  //       setLoading(false);
        
-      });
+  //     });
    
-  };
+  // };
 
-  const AddPortfoliod = text => {
-    let uri = BASEURL + '/artisan/portfolio';
-
+  const AddPortfoliod = async file => {
+    let uri = BASEURL + '/portfolio';
+    Alert.alert('Upload', 'Are you sure you want to upload this Image ?', [
+      {
+        text: 'Cancel',
+        onPress: () => {
+          console.log('cancel logout');
+        },
+        style: 'cancel',
+      },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          dispatch(setLoading(true));
+          const imageUrl =  await uploadImage(file);
     let data = {
-      portfolio: text,
+      portfolio: imageUrl,
+      name: '',
+      description:'',
+      user_id: auth.userData.id,
+      portfolio_type: "image",
+      portfolio_url:imageUrl
     };
-    setLoading(true);
-    axios.post(uri, {
-      
-      body: JSON.stringify(data),
+  
+    axios.post(uri,data, {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
         Authorization: 'Bearer' + ' ' + auth.token,
       },
-    })
-      .then(res => res.json())
-      .then(res => {
-        console.log({res});
-        setLoading(false);
+    }) .then(res => {
+        console.log("New Port",res);
+        const {data=[]} = res.data
+        dispatch(setLoading(false));
+        GetPortfolio(auth.userData.id,(res,err)=>{
+          if (err !== null) {
+            
+          }else{
+            setPortfolio(res)
+          }
+        })
         //setImchange(!imchange);
-      })
-      .then(res => {
-        
-        navigation.navigate('ArtisanProfile');
       })
       .catch(error => {
         console.log('the error', error);
-        setLoading(false);
+        dispatch(setLoading(false));
        
       });
+         
+        },
+      },
+    ]);
+   
     //setLoading(false);
   };
 
@@ -507,8 +578,8 @@ function ArtisanProfile(props) {
   var CANCEL_INDEX = 2;
 
   const renderNavBar = () => (
-    <View style={styles.navContainer}>
-      <View style={styles.statusBar} />
+    
+    
       <View style={styles.navBar}>
         <TouchableOpacity
           style={styles.iconLeft}
@@ -517,7 +588,7 @@ function ArtisanProfile(props) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.iconRight}
-          //onPress={_pickAvatar}
+          onPress={_pickProfileVideo}
         >
           <View
             style={{
@@ -527,13 +598,15 @@ function ArtisanProfile(props) {
               borderRadius: 12,
              
             }}>
-            {/* <Text style={{ fontWeight: "700", color: colors.medium }}>
-              Edit Profile Picture
-            </Text> */}
+             <MaterialCommunityIcons
+                      name='camera'
+                      size={32}
+                      color="white"
+                    />
           </View>
         </TouchableOpacity>
       </View>
-    </View>
+    
   );
 
   const _handleTextReady = () => {
@@ -580,13 +653,25 @@ function ArtisanProfile(props) {
             />
           </RatingImage>
           <RatingBody>
+          <View style={{marginVertical: hp('2%'), width: '50%'}}>
+                      <StarRating
+                        disabled={true}
+                        maxStars={5}
+                        rating={
+                         !item.rating ? 0
+                            : parseInt(Number(item.rating))
+                        }
+                        // emptyStar={"star-o"}
+                        fullStar={require('src/assets/icons/gold_key.png')}
+                        halfStar={require('src/assets/icons/gray_key.png')}
+                        emptyStar={require('src/assets/icons/gray_key.png')}
+                        fullStarColor={'#FFFFFF'}
+                        emptyStarColor={'#FFFFFF'}
+                        starSize={wp('5%')}
+                      />
+                    </View>
             <RatingTitle>{`${item.user.first_name} ${item.user.last_name}`}</RatingTitle>
             <RatingComment>Comment: {item.comment ?? 'Good'}</RatingComment>
-            <RatingComment>Rating: {item.rating}</RatingComment>
-            {/* <StarsWrap>
-              <AntDesign name="star" size={20} color="#F7B24B" />
-              <RatingCount>{item.stars}/5</RatingCount>
-            </StarsWrap> */}
           </RatingBody>
         </RatingWrap>
       </View>
@@ -653,7 +738,7 @@ function ArtisanProfile(props) {
                 <TouchableHighlight
                   onPress={() => {
                    
-                    dispatch({type: 'TOGGLE_PORTFOLIO', id:preimage.id})
+                    // dispatch({type: 'TOGGLE_PORTFOLIO', id:preimage.id})
                     _handleDeletePortfolio(preimage.id);
                   }}>
                   <MaterialCommunityIcons
@@ -675,7 +760,7 @@ function ArtisanProfile(props) {
               }}>
               <Image
                 source={{
-                  uri: preimage.portfolio,
+                  uri: preimage.portfolio_url,
                 }}
                 style={{width: '100%', height: '100%'}}
                 resizeMode="contain"
@@ -801,7 +886,7 @@ function ArtisanProfile(props) {
 
   const Tab1 = () => {
     return (
-      <Animatable.View style={styles.tabContent} animation="fadeInLeft">
+      <ScrollView style={styles.tabContent} animation="fadeInLeft">
         <View>
           <Text style={{color: colors.medium, fontWeight: '700'}}>Bio</Text>
           {/* <ListItemSeparator style={{ backgroundColor: Colors.secondary }} /> */}
@@ -869,9 +954,9 @@ function ArtisanProfile(props) {
                         fontWeight: 'bold',
                         fontSize: 28,
                       }}>
-                      {!rating || !rating.average_rating 
+                      {!rating 
                         ? 0.0
-                        : Number(rating.average_rating)
+                        : Number(rating)
                             .toFixed(1)
                             .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
                       {/* {parseInt(Number(rating.rating))} */}
@@ -898,8 +983,8 @@ function ArtisanProfile(props) {
                         fontWeight: 'bold',
                         fontSize: 28,
                       }}>
-                      {jobInsight && jobInsight.jobSuccessRate != null
-                        ? parseInt(Number(jobInsight.jobSuccessRate))
+                      {jobsuccess && jobsuccess.job_success_rate != null
+                        ? parseInt(Number(jobsuccess.job_success_rate))
                         : 0}
                       {'%'}
                     </Text>
@@ -995,7 +1080,7 @@ function ArtisanProfile(props) {
             </View>
           </RatingsContainer>
         </View>
-      </Animatable.View>
+      </ScrollView>
     );
   };
 
@@ -1005,12 +1090,12 @@ function ArtisanProfile(props) {
       <Animatable.View style={styles.tabContent} animation="fadeInLeft">
         {/* <Review /> */}
         <FlatList
-          data={reviewsd}
-          scrollEnabled={false}
+          data={reviews}
+         
           // style={{marginTop: -10}}
-          // renderItem={({item}) => _renderGalleryImage}
-          renderItem={({item, index}) => _renderReviewItem({item, index})}
+          renderItem={({item, index}) =>   <ReviewItem item={item} />}
           keyExtractor={(item, index) => index.toString()}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <Empty title="No reviews" subTitle="No employer has reviewed you" />
           }
@@ -1022,36 +1107,56 @@ function ArtisanProfile(props) {
   const Tab3 = () => {
     return (
       <Animatable.View style={{paddingTop: 0}} animation="fadeInLeft">
-        <View>
-          {/* <GalleryWrapper> */}
-          {console.log({props})}
-          {/* <FlatList
-            data={galleryItems}
-            scrollEnabled={false}
-            style={{marginTop: -10}}
-            renderItem={({item}) => _renderGalleryImage}
+       <TouchableOpacity
+                  onPress={_pickPortfolio}
+                  style={{
+                    width: '32%',
+                    height: 100,
+                    backgroundColor: 'transparent',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    marginHorizontal: 2,
+                    position: 'absolute',
+                    bottom: 10,
+                    right: 10,
+                    zIndex: 1000
+                  }}>
+                  <MaterialCommunityIcons name="camera" style={{color: colors.green, fontSize: wp('8%')}} />
+                </TouchableOpacity>
+
+               
+          <FlatList
+            data={portfolio}
+           
+            style={{ width: wp('100%'), marginTop: hp('3%')}}
+            renderItem={({item}) => <PortfolioView  item={item} />}
             numColumns={3}
             // "http://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4"
-            keyExtractor={(item, index) => index.toString()}
-          /> */}
+            // keyExtractor={(item, index) => index.toString()}
+            ListEmptyComponent={
+              <Empty title="No reviews" subTitle="No employer has reviewed you" />
+            }
+          />
 
-          {/* </GalleryWrapper> */}
-        </View>
+         
+        
       </Animatable.View>
     );
   };
 
-  const PortfolioView = () => {
-    try {
+  const PortfolioView = ({item}) => {
+ 
       return (
-        <>
-          {portfolio.map((item, index) => (
+        
             <TouchableOpacity
               key={item.id}
               style={{
-                width: '32%',
+                width: wp('32%'),
+                height: hp('20%'),
                 marginBottom: 5,
                 marginHorizontal: 2,
+                // backgroundColor: 'green'
               }}
               onPress={() => {
                 setModalVisible(true);
@@ -1059,18 +1164,18 @@ function ArtisanProfile(props) {
                 //GalleryModal(item);
                 //setActiveGallery(index);
               }}>
-              {/* <Text style={{}}>ssfsdf</Text> */}
+             
               <Image
-                source={{uri: item.portfolio}}
-                style={{width: '100%', height: 100, borderRadius: 0}}
+                source={{uri: item.portfolio_url}}
+                resizeMode='contain'
+                style={{ borderRadius: 0, width: wp('32%'),
+                height: hp('20%'),}}
               />
+             
             </TouchableOpacity>
-          ))}
-        </>
+           
       );
-    } catch (error) {
-      return <></>;
-    }
+   
   };
 
   const renderContent = () => {
@@ -1162,34 +1267,9 @@ function ArtisanProfile(props) {
               <Tab2 />
             </TabContent>
             <TabContent tab="Portfolio" view={view}>
-              <Animatable.View
-                animation="fadeInLeft"
-                style={{
-                  flexWrap: 'wrap',
-                  flexDirection: 'row',
-                  width: '100%',
-                  justifyContent: 'flex-start',
-                  marginTop: 5,
-                }}>
-                <PortfolioView />
-
-                <TouchableOpacity
-                  onPress={_pickPortfolio}
-                  style={{
-                    width: '32%',
-                    height: 100,
-                    backgroundColor: colors.disabled,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'row',
-                    marginHorizontal: 2,
-                  }}>
-                  <Feather name="camera" size={25} />
-                </TouchableOpacity>
-               
-              </Animatable.View>
              
-              <Tab3 />
+                <Tab3 />
+               
             </TabContent>
           </Tabs>
         </Wrapper>
@@ -1200,7 +1280,7 @@ function ArtisanProfile(props) {
   return (
     <View style={styles.container}>
       {/* <StatusBar hidden={false} /> */}
-      <ReactNativeParallaxHeader
+      {/* <ReactNativeParallaxHeader
         headerMinHeight={HEADER_HEIGHT}
         headerMaxHeight={250}
         extraScrollHeight={20}
@@ -1223,7 +1303,76 @@ function ArtisanProfile(props) {
           onScrollBeginDrag: () => console.log('onScrollBeginDrag'),
           onScrollEndDrag: () => console.log('onScrollEndDrag'),
         }}
-      />
+      /> */}
+<View style={{height: hp('30%')}}>
+  {renderNavBar()}
+            {videoUrl !== '' ? (
+              <View style={{flex: 1, }}>
+               
+                 <Video
+                 
+                  source={{uri: videoUrl}}
+                    ref={(ref)=>{
+                   
+                  console.log("__PLAYER__REF__", ref)
+                    }} 
+                    
+                    style={{flex: 1, color: colors.green }}
+                   controls
+                    resizeMode={'cover'}
+                    paused={play}
+                    
+                  />
+                   {/* <TouchableOpacity
+                  style={{
+                    position: 'absolute',
+                    top: hp('12%'),
+                    zIndex: 9000,
+                    alignSelf: 'center',
+                    
+                    
+
+                  
+
+                  }}
+                  onPress={()=>{
+                    setPlay(!play)
+                  }}> 
+
+                  {!play?<AntDesign
+                name="pause"
+                
+                color={colors.green}
+                style={{
+                  fontSize: wp('15%'),
+                  opacity: 0.3
+                }}
+              />:<AntDesign
+              name="play"
+              
+              color={colors.green}
+              style={{
+                fontSize: wp('15%')
+              }}
+            /> }
+                
+              </TouchableOpacity> */}
+              </View>
+                 
+                 
+                ) : (
+                  <ImageBackground source={{
+                    uri: defaultImg
+                  }} style={{height: hp('30%')}}>
+
+                  </ImageBackground>
+                )}
+                
+       </View>
+      <View style={{flex:1}}>
+      {renderContent()}
+      </View>
+      
       {auth.loading && <Loader />}
       <GalleryModal />
       <GalleryVideoModal />
@@ -1292,12 +1441,14 @@ const styles = StyleSheet.create({
     // backgroundColor: "#00000030",
   },
   navBar: {
-    height: NAV_BAR_HEIGHT,
+    position: 'absolute',
+    top: hp('4%'),
+    zIndex: 10000,
+   width: wp('100%'),
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
     backgroundColor: 'transparent',
-    // backgroundColor: "#00000030",
     paddingHorizontal: 10,
   },
   titleStyle: {
@@ -1419,12 +1570,12 @@ const RatingsContainer = styled.View`
   width: 100%;
   left: 0px;
   ${'' /* flex: 1; */}
-  ${'' /* height: ${Layout.window.height * 0.9 }px; */}
   padding-vertical: 40px;
   padding-start: 30px;
   background-color: #083e9e;
   display: flex;
   margin-top: 30px;
+  margin-bottom: 30px;
   border-radius: 10px;
 `;
 

@@ -1,4 +1,4 @@
-package com.keyedinv1;
+package com.ProtisanV1;
 
 import com.facebook.react.ReactActivity;
 
@@ -10,6 +10,6 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "KeyedinV1";
+    return "ProtisanV1";
   }
 }

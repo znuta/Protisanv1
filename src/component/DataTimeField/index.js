@@ -14,7 +14,7 @@ const DataTimeField = ({
   date = new Date(),
   setDate = () => {},
   additionalStyle = {},
-  editable = true,
+  disabled = false,
   multiline = false,
   label,
 }) => {
@@ -32,20 +32,20 @@ const DataTimeField = ({
             mode="date"
             placeholder="select date"
             format="YYYY-MM-DD"
-           
+            disabled={disabled}
             //maxDate="31-12-2049"
             confirmBtnText="Confirm"
             cancelBtnText="Cancel"
             allowFontScaling={false}
             showIcon={true}
-            iconComponent={
-              <MaterialCommunityIcons
-                name="calendar-outline"
-                size={20}
-                color={colors.medium}
-                style={{marginLeft: -10}}
-              />
-            }
+            // iconComponent={
+            //   <MaterialCommunityIcons
+            //     name="calendar-outline"
+            //     size={20}
+            //     color={colors.medium}
+            //     style={{marginLeft: -10}}
+            //   />
+            // }
             customStyles={{
               dateIcon: {height: 25, width: 25},
               

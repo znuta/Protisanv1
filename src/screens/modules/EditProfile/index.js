@@ -17,6 +17,7 @@ import Colors from 'src/constants/Colors';
 import {colors} from 'src/config/variables';
 import Feather from 'react-native-vector-icons/Feather'
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import ImagePicker from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker'
 import {useNavigation} from '@react-navigation/native';
 import {Header} from 'react-native-elements';
@@ -35,8 +36,9 @@ import {BASEURL} from 'src/constants/Services';
 import {useNetInfo} from '@react-native-community/netinfo';
 import EditPen from 'src/assets/icons/edit.svg';
 import EditWhitePen from 'src/assets/icons/editwhitepen.svg';
-import { GetExpertiseFromApi, GetEducation, GetExperience } from 'src/redux/actions/AuthActions';
+import { GetExpertiseFromApi, GetEducation, GetExperience, uploadImage } from 'src/redux/actions/AuthActions';
 import axios from 'axios';
+
 
 function EditProfile(props) {
     const auth = useSelector(state => state.auth)
@@ -46,13 +48,15 @@ const dispatch = useDispatch()
   let netInfo = useNetInfo();
     const navigation = useNavigation();
     const [user, setUser] = useState(auth.userData);
- 
-  const [expertiseData, setExpertise] = useState({});
-  const [ educationData, setEducation] = useState({});
-  const [experienceData, setExperience] = useState({});
-  const [refreshing, setRefreshing] = useState(false);
+    const [expertiseData, setExpertise] = useState({});
+    const [ educationData, setEducation] = useState({});
+    const [experienceData, setExperience] = useState({});
+    const [refreshing, setRefreshing] = useState(false);
+    const [image, setImage] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [transferred, setTransferred] = useState(0);
 
-  const [avatar, setAvatar] = useState(auth.userData.avatar);
+  const [avatar, setAvatar] = useState(userData.avatar);
   useEffect(() => {
     // GetCategory();
     const {userData} = auth
@@ -78,19 +82,18 @@ const dispatch = useDispatch()
   }, []);
 
 
-  const UploadAvatarToApi = payload => {
+  const UploadAvatarToApi =async payload => {
 
-    let path = "avatar" 
-    const {type} = payload
-    if (!type.includes("image")) {
-     path = "video"
-    }
-    let uri = BASEURL + `/media/upload/image/${auth.userData.id}`;
-    const data = new FormData();
-    data.append("files", payload);
+    let uri = BASEURL + `/media/user/media/${auth.userData.id}`;
 
+    // const data = new FormData();
+    // data.append("files", payload);
+     const data = {
+       avatar: payload
+      }
+    console.log("___FILE__PAYLOAD__", payload)
     dispatch(setLoading(true));
-    axios.post(uri, data, {
+    axios.put(uri,data, {
       
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
@@ -110,36 +113,6 @@ const dispatch = useDispatch()
    
   };
 
-  const _pickAvatar3 = async () => {
-
-    try {
-        const result = await DocumentPicker.pick({
-        type: [DocumentPicker.types.images],
-        })
-        console.log("___IMAGE___", result)
-      let name = result[0].name;
-      let uri = result[0].uri;
-      let lastIndexOf = uri.lastIndexOf(".");
-      let ext = uri.substr(lastIndexOf+1, uri.length-1);
-      var file = {
-          name: name,
-          uri: Platform.OS === 'android' ? result[0].uri : result[0].uri.replace("file://", ""),
-      };
-
-      setAvatar(result[0])
-        dispatch(saveAvatar(uri));
-        UploadAvatarToApi(result[0]);
-      
-    } catch (err) {
-        if (DocumentPicker.isCancel(err)) {
-        // User cancelled the picker, exit any dialogs or menus and move on
-        } else {
-        throw err
-        }
-    }
-  
-  }
-
   const _pickAvatar = async () => {
     console.log('Open Image Picker');
     
@@ -151,14 +124,22 @@ const dispatch = useDispatch()
             quality: 0.4,
             //allowsMultipleSelection: false,
             includeBase64: true,
+            
           });
         if (!result.cancelled) {
-            console.log("___IMAGE___", result)
+           
           const { uri, type, base64, fileName, fileSize, width, height } = result.assets[0]
           const file = {uri, type, base64,name:fileName , size:fileSize, width, height }
-       setAvatar(file)
-        dispatch(saveAvatar(uri));
-        UploadAvatarToApi(file);
+          console.log("___IMAGE___", file)
+          // uploadImage(file)
+          dispatch(setLoading(true));
+        const imageUrl =  await uploadImage(file);
+        console.log("___IMAGE___", imageUrl)
+        setAvatar(imageUrl)
+        dispatch(saveAvatar(imageUrl));
+      await UploadAvatarToApi(imageUrl);
+         
+          
       }
       //console.log(result);
     } catch (E) {
@@ -220,7 +201,7 @@ const dispatch = useDispatch()
             activeOpacity={0.6}>
             <Image
               source={{
-                uri: avatar ? avatar.uri : auth.avatar,
+                uri: avatar ? avatar : userData.avatar,
                 // avatar,
                 // "https://static.dribbble.com/users/1304678/screenshots/7301908/media/3f91189797dd514eb6446b21a4faa209.png",
               }}

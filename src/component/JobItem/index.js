@@ -8,13 +8,14 @@ import {
 } from 'react-native';
 import styled from 'styled-components/native';
 import ReadMore from 'react-native-read-more-text';
-import {colors, hp, wp} from 'src/config/variables';
+import {colors, fonts, hp, wp} from 'src/config/variables';
 import Feather from 'react-native-vector-icons/Feather'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import TimeAgo from 'react-native-timeago';
+import moment from 'moment';
 
 const JobItem = ({ item, index, onPress = ()=>{} }) => {
-
+const defaultImage = 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80'
   const _renderTruncatedFooter = handlePress => {
     return <View style={{marginBottom: hp('0.5%')}}></View>;
   };
@@ -35,7 +36,8 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
         onPress={onPress}>
         <View
           style={{
-            marginVertical: 15,
+            marginHorizontal: wp('3.5%'),
+            marginVertical: hp('1.5%'),
             marginBottom: 0,
             flex: 1,
             borderRadius: 12,
@@ -43,13 +45,13 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
             padding: wp('2%'),
             shadowColor: '#000',
             shadowOffset: {
-              width: 0,
-              height: 2,
+              width: 2,
+              height: 1,
             },
-            shadowOpacity: 0.25,
-            shadowRadius: 1.41,
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
 
-            elevation: 2,
+            elevation: 10,
           }}>
           <View style={{flexDirection: 'row'}}>
             <View
@@ -59,7 +61,7 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
                 marginRight: 10,
               }}>
               <Image
-                source={{uri: item.user.avatar ?? defaultImage}}
+                source={{uri: item.avatar || defaultImage}}
                 style={{width: wp('12%'), height: wp('12%'), borderRadius: 50}}
               />
             </View>
@@ -71,7 +73,7 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
                 numberOfLines={1}
                 renderTruncatedFooter={_renderTruncatedFooter}
                 renderRevealedFooter={_renderRevealedFooter}>
-                <SectionTitle>{item.title}</SectionTitle>
+                <SectionTitle>{item.name}</SectionTitle>
               </ReadMore>
               <View>
                 <View
@@ -79,7 +81,7 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
                     flex: 1,
                   }}>
                   <ReadMore
-                    numberOfLines={3}
+                    numberOfLines={4}
                     renderTruncatedFooter={_renderTruncatedFooter}
                     renderRevealedFooter={_renderRevealedFooter}>
                     <DescriptionText style={{flex: 1}}>
@@ -126,7 +128,7 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
                 width: '75%',
                 flex: 1,
               }}>
-              {item.skills.length > 2 ? (
+              {item.skill_set.length > 2 ? (
                 <>
                   
                   <SkillBadge>
@@ -136,7 +138,7 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
                         fontWeight: '700',
                         color: colors.green,
                       }}>
-                      {item.skills[0]}
+                      {item.skill_set[0]}
                     </Text>
                   </SkillBadge>
                   <SkillBadge>
@@ -146,16 +148,16 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
                         fontWeight: '700',
                         color: colors.green,
                       }}>
-                      {item.skills[1]}
+                      {item.skill_set[1]}
                     </Text>
                   </SkillBadge>
                   <Text style={{color: colors.medium, fontSize: wp('3%')}}>
                     {' '}
-                    + {item.skills.length - 1}
+                    + {item.skill_set.length - 1}
                   </Text>
                 </>
               ) : (
-                item.skills.map((skill, index) => (
+                item.skill_set.map((skill, index) => (
                   <SkillBadge key={index.toString()}>
                     <Text
                       style={{
@@ -186,19 +188,21 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
                   color: colors.green,
                   fontWeight: '700',
                 }}>
-                {item.state}
+                {item.city}
               </Text>
               <Text> </Text>
-              <TimeAgo
+
+              <TimeWrapper>{moment(item.createdAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
+              {/* <TimeAgo
                 style={{
                   fontSize: wp('2.5%'),
                   color: 'grey',
                   marginLeft: 'auto',
                   marginRight: wp('1.5%'),
                 }}
-                dateFrom={item.created_at}
-                dateTo={new Date()}
-              />
+               
+                dateTo={item.createdAt}
+              /> */}
             
             </View>
             
@@ -210,7 +214,12 @@ const JobItem = ({ item, index, onPress = ()=>{} }) => {
 
 export default JobItem
   
-
+const TimeWrapper = styled.Text`
+  font-size: ${wp('2.5%')};
+  color: ${colors.lightgrey};
+  font-weight: 300;
+  margin-left: auto;
+`;
 const SkillBadge = styled.View`
   background-color: rgba(142, 135, 241, 0.1);
   padding: 6px;
@@ -221,8 +230,10 @@ const SkillBadge = styled.View`
 `;
 const SectionTitle = styled.Text`
   font-weight: 700;
-  font-size: ${wp('3.5%')};
+  font-size: ${wp('4%')};
   color: rgba(19, 24, 68, 0.7);
+  line-height: 25px;
+  font-family: ${fonts.PRIMARY_REGULLAR}
 `;
 const GreenText = styled.Text`
   font-weight: 700;
@@ -230,11 +241,10 @@ const GreenText = styled.Text`
   color: ${colors.green};
 `;
 const DescriptionText = styled.Text`
-  font-size: ${wp('3%')};
-  letter-spacing: 0px;
-  color: rgba(19, 24, 68, 0.5);
-  line-height: ${wp('3.8%')};
-  font-weight: 500;
-
-  flex: 1;
+font-size: ${wp('3%')}
+margin-top: ${hp('1.8%')};
+line-height: ${hp('1.8%')};
+font-weight: 400;
+color: ${colors.medium};
+font-family: ${fonts.PRIMARY_REGULLAR}
 `;

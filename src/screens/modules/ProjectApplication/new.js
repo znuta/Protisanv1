@@ -28,6 +28,7 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {check, request, PERMISSIONS} from 'react-native-permissions';
 import LocationInput from 'src/component/LocationInput';
 import Toast from 'react-native-toast-message';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -47,7 +48,7 @@ function ProjectApplication(props) {
   };
   const goNext = () => {
     props.saveState({...value})
-    if (name === "" || description == "" || skill_set === "" || type === "" || profession === "" ||address_str==="",!attachments.length) {
+    if (name === "" || description == "" || skill_set === "" || type === "" || profession === "" ||address_str==="") {
       Toast.show({
         type: 'error',
         text1: 'Required Field',
@@ -81,7 +82,7 @@ function ProjectApplication(props) {
             let ext = uri.substr(lastIndexOf+1, uri.length-1);
             var file = {
                 name: name,
-                uri: Platform.OS === 'android' ? item.uri : item.uri.replace("file://", ""),
+                uri: item.uri,
                 base64: item.base64
             };
             fileItems.push(file)
@@ -110,7 +111,7 @@ function ProjectApplication(props) {
     } = details;
     console.log("LOCATION+++", details)
     console.log("LOCATION+++3", data)
-    setValue({ ...value, address_str: description, longitude: lng, latitude: lat, country:terms[2].value, city:terms[1].value  });
+    setValue({ ...value, address_str: description, longitude: lng, latitude: lat, country:terms[2].value, city:terms[2].value  });
     
   };
 
@@ -169,7 +170,7 @@ function ProjectApplication(props) {
       <View
         style={{
           backgroundColor: colors.green,
-          height: wp('25%'),
+          height: wp('35%'),
           justifyContent: 'space-between',
           flexDirection: 'row',
           alignItems: 'center',
@@ -193,7 +194,7 @@ function ProjectApplication(props) {
           paddingVertical: wp('4%'),
         }}>
         
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
           <Text style={{ color: colors.grey, fontSize: 15 }}>
             Create a project and access top skilled protisians near you
           </Text>
@@ -248,8 +249,13 @@ function ProjectApplication(props) {
         </View>
       </TouchableOpacity>
 
-         
-          <SelectField
+      <TextField
+            value={type}
+            label="Project type"
+            placeholder="E.g Long Term"
+            onChangeText={itemValue => onChangeText('type', itemValue)}
+          />
+          {/* <SelectField
              value={type}
              label="Project type"
              items={[
@@ -260,23 +266,17 @@ function ProjectApplication(props) {
             onChangeText={itemValue => {
               onChangeText('type', itemValue)
             }}
-          />
+          /> */}
 
          
-          <SelectField
+          
+           <TextField 
             value={profession}
-             label="Profession"
-             items={[
-               {label: 'Software Engineer', value: 'Software Engineer'},
-               {label: 'Doctor', value: 'Doctor'},
-               {label: 'Teacher', value: 'Teacher'},
-               {label: 'Acountant', value: 'Acountant'},
-               {label: 'Psychologist', value: 'Psychologist'},
-             ]}
+        label="Profession"
+        placeholder="E.g Software Engineer, Acountant, Doctor"
             onChangeText={itemValue => {
               onChangeText('profession', itemValue)
-            }}
-          />
+            }} />
 
          
           <TextField 
@@ -302,7 +302,7 @@ function ProjectApplication(props) {
             }}>
             <Button text="Next" onPress={() => {goNext()}} />
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
         <Toast style={{position: 'absolute'}} />
       </View>
     </View>

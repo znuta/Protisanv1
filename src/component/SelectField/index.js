@@ -48,7 +48,7 @@ const SelectField = ({
         <SelectPicker
           style={[
              styles.selectField,
-            {borderWidth: 0, backgroundColor: '#f2f3f4', width: '100%', overflow: 'hidden'},
+            {borderWidth: 0, backgroundColor: '#f2f3f4', width: '100%', overflow: 'hidden', borderRadius: 100},
           ]}
           selectedValue={value}
           onValueChange={(itemValue, itemIndex) => {

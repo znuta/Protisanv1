@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.keyedinv1">
+  package="com.ProtisanV1">
 
     <uses-permission android:name="android.permission.INTERNET" />
 

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
+  Linking,
 } from 'react-native';
 import styled from 'styled-components';
 import {Header, Icon, Divider} from 'react-native-elements';
@@ -23,7 +24,7 @@ import Layout from 'src/constants/Layout';
 import {colors, fonts, hp, wp} from 'src/config/variables';
 import {BASEURL} from 'src/constants/Services';
 import {connect} from 'react-redux';
-import {styles} from './styles';
+import {InputLabel, styles} from './styles';
 import Loader from 'src/component/Loader';
 import Button from 'src/component/Button/index';
 import TextField from 'src/component/TextField';
@@ -220,7 +221,7 @@ const {params = {}} = props.route
   };
 
   
-  const { due_date = new Date(), bid_amount = '', cover_letter = '' } = value;
+  const { due_date = new Date(), bid_amount = '', cover_letter = '', attachment = '' } = value;
   var num = parseFloat(bid_amount);
   var amountToReceived = num - (num * .20);
   return (
@@ -406,7 +407,7 @@ const {params = {}} = props.route
           </ProposalWrap>
         </InnerContentContainer>
 
-        <InnerContentContainer>
+        <MapContentContainer>
           
           <MapView
         ref={mapRef}
@@ -480,7 +481,7 @@ const {params = {}} = props.route
           </Marker>
        
       </MapView>
-        </InnerContentContainer>
+        </MapContentContainer>
 
         <InnerContentContainer>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
@@ -632,20 +633,31 @@ const {params = {}} = props.route
                 <JobDesc>{cover_letter}</JobDesc>
               </ReadMore>
         </InnerContentContainer>
-            <TouchableOpacity
-              onPress={() => documentPicker()}
-            >
-            <TextField
-               editable = {false}
-              additionalStyle={{
-                inputField: {
-                  backgroundColor: colors.layout,
-                },
-              }}
-              label="View Documents"
-              
-              />
-              </TouchableOpacity>
+        <TouchableOpacity
+        disabled={!attachment}
+            style={{flexDirection: 'row', marginVertical: hp('1%')}}
+            onPress={() => {
+              Linking.canOpenURL(attachment).then(supported => {
+                if (supported) {
+                  Linking.openURL(attachment);
+                } else {
+                  console.log("Don't know how to open URI: " + attachment);
+                }
+              })}
+            }>
+            <View style={styles.circle}>
+              <MaterialCommunityIcons name="plus" style={styles.white_plus} />
+            </View>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text style={styles.portfolio_text}>
+                <InputLabel>Download Attachment</InputLabel> {attachment? ``: " (No attachment included.)"}
+              </Text>
+            </View>
+          </TouchableOpacity>
             <ListItemSeparator />
             <View style={{width: '100%'}}>
               <Label style={{color: colors.green, marginBottom: hp('0.3%')}}>
@@ -667,10 +679,8 @@ const {params = {}} = props.route
                 {amountToReceived||"N38,000"}
               </DescriptionText>
             </View>
-          </View>
-        
 
-        <View style={styles.actionBox}>
+            <View style={styles.actionBox}>
         <CTAWrap>
               <CTAButton
                 onPress={() => {
@@ -702,6 +712,10 @@ const {params = {}} = props.route
               </CTAButton>
             </CTAWrap>
         </View>
+          </View>
+        
+
+        
       </ContentContainer>
     </Container>
   );
@@ -820,7 +834,15 @@ const SkillsWrap = styled.View`
   margin-top: 10px;
   ${'' /* margin-vertical: -6; */}
 `;
-
+const MapContentContainer = styled.View`
+ 
+  background-color: #ffffff;
+  margin-vertical: ${hp('1%')};
+min-height: ${hp('10%')}
+  flex: 1;
+  border-radius: 10px;
+  ${'' /* align-items: center; */}
+`;
 const SkillBadge = styled.View`
   background-color: ${colors.light};
   padding-top: ${wp('1%')};

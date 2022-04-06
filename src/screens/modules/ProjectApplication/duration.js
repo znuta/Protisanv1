@@ -19,6 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import styled from 'styled-components/native';
 import Button from 'src/component/Button';
 import Toast from 'react-native-toast-message';
+import DataTimeField from 'src/component/DataTimeField';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -50,7 +51,7 @@ const Payment = props => {
       <View
         style={{
           backgroundColor: colors.green,
-          height: wp('25%'),
+          height: wp('35%'),
           justifyContent: 'space-between',
           flexDirection: 'row',
           alignItems: 'center',
@@ -89,18 +90,23 @@ const Payment = props => {
               }}
             />
            
+           <TextField
+            value={payment_mode}
+            label="Payment mode"
+            placeholder="E.g Card/Wallet or Cash"
+            onChangeText={itemValue => onChangeText('payment_mode', itemValue)}
+          />
 
-
-            <SelectField
+            {/* <SelectField
               value={payment_mode}
               label="Payment mode"
               onValueChange={itemValue => onChangeText('payment_mode', itemValue)}
               items={[
-                {label: 'Fixed', value: 'Fixed'},
-                {label: 'Long Term', value: 'Long Term'},
+                {label: 'Card/Wallet', value: 'Card/Wallet'},
+                {label: 'Cash', value: 'Cash'},
                 
               ]}
-            />
+            /> */}
 
             <Text>Project budget</Text>
             <View style={styles.inputContainer}>
@@ -125,7 +131,26 @@ const Payment = props => {
                 width: '100%',
                 flexDirection: 'row',
               }}>
-              <View style={{ flex: 0.45 }}>
+
+<         DataTimeField
+            // style={{ width: 100 }}
+            duration={150}
+            date={start_date}
+            label="Project start date"
+            placeholder="select date"
+            setDate={value => onChangeText('start_date', value)}
+          />
+
+          {/* ios stop date */}
+          <DataTimeField
+            // style={{ width: 100 }}
+            duration={150}
+            date={end_date}
+            label="Project end date"
+            placeholder="select date"
+            setDate={value => onChangeText('end_date', value)}
+          />
+              {/* <View style={{ flex: 0.45 }}>
                 <Text>Project start date</Text>
                 <View style={[styles.inputContainer]}>
                   <View style={styles.nairaStyle}>
@@ -156,11 +181,9 @@ const Payment = props => {
                     />
                   </InputField>
                 </View>
-              </View>
+              </View> */}
             </View>
-          </ScrollView>
-          <Toast style={{position: 'absolute'}} />
-          <View
+            <View
             style={{
               height: SCREEN_HEIGHT / 3,
               display: 'flex',
@@ -180,6 +203,9 @@ const Payment = props => {
               next()
             }} />
           </View>
+          </ScrollView>
+          <Toast style={{position: 'absolute'}} />
+         
         </View>
       </View>
     </View>

@@ -25,6 +25,7 @@ import SelectField from 'src/component/SelectField';
 import {useNavigation} from '@react-navigation/native';
 import styled from 'styled-components/native';
 import Button from 'src/component/Button';
+import { hp } from 'src/config/variables';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -50,7 +51,7 @@ const Payment = props => {
       <View
         style={{
           backgroundColor: colors.green,
-          height: wp('25%'),
+          height: wp('35%'),
           justifyContent: 'space-between',
           flexDirection: 'row',
           alignItems: 'center',
@@ -90,17 +91,17 @@ const Payment = props => {
             <View
               style={{
                 display: 'flex',
-                flexDirection: 'row',
+                
                 justifyContent: 'space-between',
-                alignItems: 'center',
+               
                 paddingVertical: 10,
               }}>
               <View
                 style={{
                   display: 'flex',
                   flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  // justifyContent: 'center',
+                marginBottom: hp('1%')
                 }}>
                 <Entypo name="list" size={18} color={colors.green} />
                 <Text style={{marginLeft: 10, fontWeight: 'bold'}}>
@@ -114,17 +115,18 @@ const Payment = props => {
             <View
               style={{
                 display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                // flexDirection: 'row',
+                // justifyContent: 'space-between',
+                // alignItems: 'center',
                 paddingVertical: 10,
               }}>
               <View
                 style={{
                   display: 'flex',
                   flexDirection: 'row',
-                  justifyContent: 'center',
+                  // justifyContent: 'center',
                   alignItems: 'center',
+                  marginBottom: hp('1%')
                 }}>
                 <FontAwesome
                   name="exclamation-circle"

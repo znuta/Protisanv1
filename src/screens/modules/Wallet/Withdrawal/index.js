@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,9 +12,41 @@ import {wp, fonts, colors, hp} from 'src/config/variables';
 import TextField from 'src/component/TextField';
 import Button from 'src/component/Button';
 import styled from 'styled-components/native';
+import { GetNigerianBank, GetUserBank, intializePayment, validateAccountNumber } from 'src/redux/actions/payment/addCard/cardSetup';
+import { useDispatch, useSelector } from 'react-redux';
+import SelectField from 'src/component/SelectField';
 
 const {width} = Dimensions.get('window');
 const Deposit = ({setstep}) => {
+  const dispatch = useDispatch()
+  const {auth} = useSelector(state => state)
+  const [banks, setBanks] = useState([])
+  const [values, setValues] = useState({email: auth.userData.email, full_name: `${auth.userData.first_name} ${auth.userData.last_name}`})
+  const [bankItems, setBankItems] = useState([])
+  const {full_name, email, amount} = values
+  const onChangeText = (key, value) => {
+   
+    setValues({...values, [key]: value})
+    
+  };
+  useEffect(()=>{
+    // dispatch(GetUserBank((res,error)=>{
+    //   if (res !==null) {
+    //     const {data = []} = res.data
+    //     if (data.length) {
+         
+    //       const payload = data[0]
+       
+    //       setValues({...values, bank_id: payload.bank_id, })
+    //     }
+        
+    //     console.log("___RES__USER_BANK",res)
+    //   }else{
+    //     console.log("___ERROR__USER_BANK",error)
+    //   }
+
+    // }))
+  },[])
   return (
     <View style={styles.walletContainer}>
       <Text style={styles.walletHeader}> Withdrawal Amount</Text>
@@ -37,13 +69,16 @@ const Deposit = ({setstep}) => {
         <View style={styles.nairaStyle}>
           <Text style={{fontWeight: 'bold', fontSize: wp('7%')}}>N</Text>
         </View>
-        <InputField>
+        <InputField >
           <TextInput
+          value={amount}
             placeholder="Amount"
+            onChangeText={value => onChangeText('amount', value)}
             style={[styles.inputField]}
             keyboardType="phone-pad"
           />
         </InputField>
+       
       </View>
       <Text
         style={{
@@ -55,7 +90,25 @@ const Deposit = ({setstep}) => {
         }}>
         Min. deposit amount of NGN 500
       </Text>
-
+      <View style={{width: wp('80%')}}>
+      <TextField
+        value={full_name}
+        onChangeText={value => onChangeText('full_name', value)}
+        placeholder="Toyeeb Atunde"
+        placeholder="Full Name"
+        
+      />
+      </View>
+      <View style={{width: wp('80%')}}>
+      <TextField
+        value={email}
+        onChangeText={value => onChangeText('email', value)}
+        placeholder="atundearisekola@gmail.com"
+        placeholder="Email Address"
+        
+      />
+      </View>
+      
       <View style={{marginTop: wp(15)}}>
         {/* <TouchableOpacity onPress={setstep} style={styles.buttonStyle}>
           <Text
@@ -64,7 +117,10 @@ const Deposit = ({setstep}) => {
           </Text>
         </TouchableOpacity> */}
         <Button
-          onPress={setstep}
+          onPress={()=>{
+            setstep(values)
+           
+          }}
           text="Proceed"
           type="primary"
           additionalStyle={{

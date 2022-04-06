@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
   actionBox: {
     alignItems: 'center',
     marginVertical: hp('3%'),
+    flex: 1
   },
   footText: {
     fontSize: wp('3.2%'),

@@ -30,18 +30,29 @@ import Withdrawal from './Withdrawal';
 import Deposite from './deposite'
 import axios from 'axios';
 import { saveBalance } from 'src/redux/actions/WalletActions';
-import { setLoading } from 'src/redux/actions/AuthActions';
+import { setLoading, setToast } from 'src/redux/actions/AuthActions';
+import Transfer from './Transfer';
+import { AddPaymentApi, intializePayment, SetupPayment, tranferFund } from 'src/redux/actions/payment/addCard/cardSetup';
+import Toast from 'src/component/Toast';
+import Loader from 'src/component/Loader';
+// import  AddCard from './AddCard/AddCard';
 
 function Wallet(props) {
   const navigation = useNavigation();
+  const refTransferRBSheet = useRef();
   const refRBSheet = useRef();
   const refDepositeSheet = useRef();
   const dispatch = useDispatch()
   const { auth, wallet } = useSelector(state => state)
+  const {userData = {}} = auth
   const [refreshing, setRefreshing] = useState(false);
   const [transactionHistory, setTransactionHistory] = useState([{},{}]);
   const [balance, setBalance] = useState(0);
   const rotateValue = new Animated.Value(0);
+  const [localToast, setLocalToast] = useState({});
+    
+
+
   useEffect(() => {
     StatusBar.setHidden(false);
     setBalance(auth.wallet_balance);
@@ -159,7 +170,7 @@ function Wallet(props) {
             style={{paddingHorizontal: 10}}>
             <Image
               source={{
-                uri: auth.avatar,
+                uri: userData.avatar,
                 // avatar,
                 // "https://static.dribbble.com/users/1304678/screenshots/7301908/media/3f91189797dd514eb6446b21a4faa209.png",
               }}
@@ -240,7 +251,7 @@ function Wallet(props) {
             <EarningBalance font-size={8}>
               &#8358;{' '}
               {Number(balance)
-                .toFixed(2)
+                .toFixed(1)
                 .replace(/\d(?=(\d{3})+\.)/g, '$&,')}
             </EarningBalance>
           </WalletBalanceWrap>
@@ -284,17 +295,17 @@ function Wallet(props) {
           <WalletActions>
             <WalletAction
               onPress={() => {
-                navigation.navigate('Withdrawal');
+                refTransferRBSheet.current.open();
               }}>
               <WalletActionIcon>
-                <Feather
-                  name="filter"
+                <MaterialCommunityIcons
+                  name="bank-transfer"
                   size={20}
                   color="white"
                   style={{ opacity: 0.8 }}
                 />
               </WalletActionIcon>
-              <WalletActionLabel>Filter</WalletActionLabel>
+              <WalletActionLabel>Transfer</WalletActionLabel>
             </WalletAction>
             <WalletAction
               onPress={() => {
@@ -393,7 +404,68 @@ function Wallet(props) {
               height: '11%',
             },
           }}>
-          <Withdrawal />
+            <Toast {...localToast}/>
+          <Withdrawal setstep={(values)=>{
+             dispatch(intializePayment(values,(res,error)=>{
+              if (res !==null) {
+                const {data} = res.data
+                setLocalToast({ title: "Withdrawal Successful", message: `Your withdrawal  was successful.`, show: true, type:"success", callback: ()=>{
+                  setLocalToast({})
+                  refRBSheet.current.close()
+                }})
+                console.log("___RES__Payments",res)
+              }else{
+                setLocalToast({ title: "Transfer Error", message: "Your transaction could not be completed, please try again.", show: true, type:"error", callback: ()=>{
+                  setLocalToast({})
+                }})
+                console.log("___ERROR__Payments_BANK",error)
+              }
+        
+            }))
+          }} />
+        </RBSheet>
+
+        <RBSheet
+          ref={refTransferRBSheet}
+          height={hp('70%')}
+          animationType="slide"
+          closeOnDragDown={true}
+          closeOnPressMask={true}
+          customStyles={{
+            container: {
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+            },
+            wrapper: {
+              // backgroundColor: 'transparent',
+              borderTopLeftRadius: 10,
+            },
+            draggableIcon: {
+              backgroundColor: 'lightgrey',
+              width: '30%',
+              height: '11%',
+            },
+          }}>
+            <Toast {...localToast}/>
+          <Transfer setstep={(values)=>{
+            dispatch(tranferFund(values, (res,error)=>{
+              if (res !==null) {
+                const {data} = res.data
+                setLocalToast({ title: "Transfer Successful", message: `Your transfer to ${values.receiver_email} was successful.`, show: true, type:"success", callback: ()=>{
+                  setLocalToast({})
+                  refTransferRBSheet.current.close()
+                }})
+                
+               
+              }else{
+                setLocalToast({ title: "Transfer Error", message: "Your transaction could not be completed, please try again.", show: true, type:"error", callback: ()=>{
+                  setLocalToast({})
+                }})
+                console.log("___ERROR__Valid_BANK",error.response)
+              }
+        
+            }))
+          }} />
         </RBSheet>
 
         <RBSheet
@@ -417,7 +489,29 @@ function Wallet(props) {
               height: '11%',
             },
           }}>
-          <Deposite refDepositeSheet={refDepositeSheet} />
+            {auth.loading &&   <Loader />}
+           
+              <Toast {...localToast}/>
+          <Deposite submit={(value)=>{
+
+            dispatch(AddPaymentApi({...value, reference: "eudn93u9xn98ew"},(res,error)=>{
+              
+              if (res !==null) {
+                const {data} = res.data
+                setLocalToast({ title: "Transaction Successful", message: `Your deposit of ${values.amount} was successful.`, show: true, type:"success", callback: ()=>{
+                  setLocalToast({})
+                  refDepositeSheet.current.close();
+                }})
+                
+               
+              }else{
+                setLocalToast({ title: "Transaction Error", message: "Your transaction could not be completed, please try again.", show: true, type:"error", callback: ()=>{
+                  setLocalToast({})
+                }})
+                console.log("___ERROR__Valid_BANK",error.response)
+              }
+            }) ) 
+          }} />
         </RBSheet>
       </ContentContainer>
     </Container>
@@ -448,7 +542,7 @@ const WalletBalanceWrap = styled.View`
 `;
 
 const WalletBalance = styled.Text`
-  font-size: ${wp('10%')};
+  font-size: ${wp('8%')};
   font-weight: 900;
   color: white;
 `;

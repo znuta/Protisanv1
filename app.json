@@ -1,6 +1,6 @@
 {
-  "name": "KeyedinV1",
-  "displayName": "KeyedinV1",
+  "name": "ProtisanV1",
+  "displayName": "ProtisanV1",
   "packagerOpts": { "config": "metro.config.js", "sourceExts": [ "js","jsx","svg","ts","tsx"] }
   
 

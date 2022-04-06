@@ -136,7 +136,7 @@ android {
 //   }
 
     defaultConfig {
-        applicationId "com.keyedinv1"
+        applicationId "com.ProtisanV1"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

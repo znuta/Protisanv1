@@ -15,16 +15,16 @@ import Feather from 'react-native-vector-icons/Feather'
 import ReadMore from 'react-native-read-more-text';
 import {useNavigation} from '@react-navigation/native';
 import colors from 'src/config/colors';
-import {hp, wp} from 'src/config/variables';
+import {hp, wp, fonts} from 'src/config/variables';
+import moment from 'moment';
 
 const ProjectItem = props => {
-  let item = props.item;
-  
+    let item = props.item;
 const {onPress=()=>{}} = props
     const _renderTruncatedFooter = handlePress => {
         return (
           <Text
-            style={{color: '#000',  fontWeight: '600', fontSize: 13}}
+            style={{color: '#000', marginTop: 5, fontWeight: '600', fontSize: 13}}
             // onPress={handlePress}
           >
             {/* Read more */}
@@ -35,7 +35,7 @@ const {onPress=()=>{}} = props
       const _renderRevealedFooter = handlePress => {
         return (
           <Text
-            style={{color: '#000',  fontWeight: '500', fontSize: 14}}
+            style={{color: '#000', marginTop: 5, fontWeight: '500', fontSize: 14}}
             onPress={handlePress}>
             Show less
           </Text>
@@ -63,7 +63,7 @@ const {onPress=()=>{}} = props
                   fontSize: wp('3.5%'),
                   color: colors.green,
                   fontWeight: '500',
-                  // marginLeft: 7,
+                  marginLeft: 7,
                 }}
               />
               <Text
@@ -75,7 +75,10 @@ const {onPress=()=>{}} = props
                 }}>
                 {/* Due Tomorrow */}
                 {/* {item.endDate} */}
-                Due <TimeAgo time={item.end_date} />
+                Due <TimeAgo time={new Date(item.end_date)} />
+                 {/* <TimeWrapper>{moment(item.end_date, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper> */}
+                
+                
                 {/* If deadline has passed, mark 'project as closed', set 'status to archived' and set deadline to 'Expired'  */}
               </Text>
             </DeadlineWrap>
@@ -97,7 +100,7 @@ const {onPress=()=>{}} = props
                   fontWeight: '500',
                   marginLeft: 7,
                 }}>
-                {item.status || "Open"}
+                {item.status}
               </Text>
             </StatusWrap>
           </Meta>
@@ -127,13 +130,13 @@ const {onPress=()=>{}} = props
         <View
           style={{
             flexDirection: 'row',
-            marginTop: hp('1%'),
+
             flexWrap: 'wrap',
             width: '100%',
             flex: 1,
           }}>
           <FlatList
-            data={item.skill_set}
+            data={item.skills}
             showsVerticalScrollIndicator={false}
             showsHorizontalScrollIndicator={false}
             bounces={true}
@@ -141,7 +144,7 @@ const {onPress=()=>{}} = props
             scrollEnabled={true}
             //numColumns={2}
             horizontal={true}
-            style={{ flex: 1}}
+            style={{marginTop: 10, flex: 1}}
             // renderItem={({item}) => _renderGalleryImage}
             renderItem={({item, index}) => (
               <View style={{flex: 1, width: '100%'}}>
@@ -202,6 +205,13 @@ const {onPress=()=>{}} = props
     },
   });
   
+
+  const TimeWrapper = styled.Text`
+  font-size: ${wp('2.5%')};
+  color: ${colors.lightgrey};
+  font-weight: 300;
+  margin-left: auto;
+`;
   const Wrapper = styled.View`
     flex: 1;
     ${'' /* padding-horizontal: 20px; */}
@@ -223,9 +233,9 @@ const {onPress=()=>{}} = props
     z-index: 10;
     background-color: ${colors.white};
     border-radius: ${wp('3%')};
-  
-    min-width: 40%;
-    min-height: 20%;
+    margin-horizontal: ${wp('4%')}
+    min-width: ${wp('40%')};
+    min-height: ${hp('20%')};
   
     shadow-color: #000;
     shadow-offset: 1px;
@@ -240,6 +250,7 @@ const {onPress=()=>{}} = props
     font-size: ${wp('4%')};
     font-weight: 700;
     line-height: 25px;
+    font-family: ${fonts.PRIMARY_REGULLAR}
   `;
   
   const Meta = styled.View`
@@ -248,7 +259,7 @@ const {onPress=()=>{}} = props
   `;
   
   const StatusWrap = styled.View`
-    flex: 1;
+    
     flex-direction: row;
     align-items: center;
   `;
@@ -263,11 +274,12 @@ const {onPress=()=>{}} = props
   const Description = styled.View``;
   
   const DescriptionText = styled.Text`
-  font-size: ${wp('3.4%')}
+  font-size: ${wp('3%')}
     margin-top: ${hp('1.8%')};
-    line-height: ${hp('2.5%')};
+    line-height: ${hp('1.8%')};
     font-weight: 400;
     color: ${colors.medium};
+    font-family: ${fonts.PRIMARY_REGULLAR}
   `;
   
   const Footer = styled.View`

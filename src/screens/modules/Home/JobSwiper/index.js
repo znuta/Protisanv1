@@ -11,7 +11,9 @@ import {
   Dimensions,
   Animated,
   FlatList,
-  ScrollView
+  ScrollView,
+  TextInput,
+ 
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import {check, request, PERMISSIONS} from 'react-native-permissions';
@@ -35,7 +37,9 @@ import TextField from 'src/component/TextField';
 import { debounce } from "debounce";
 import Button from 'src/component/Button/index';
 import SelectField from 'src/component/SelectField';
-
+const { height, width } = Dimensions.get('window');
+const ITEM_SIZE = width * 0.30;
+const SPACER_ITEM_SIZE = (width * - ITEM_SIZE) / 2;
 const JobSwiper = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch()
@@ -43,9 +47,10 @@ const JobSwiper = () => {
   const refRBSheet = useRef();
   const [searchItem, setsearchItem] = useState('');
   const [filters, setFilter] = useState({});
-  const [artisanData, setArtisanData] = useState([...artisans])
+  const [artisanData, setArtisanData] = useState([{key: 'left-spacer'}, ...artisans, {key: 'right-spacer'}])
   const [isFetching, setisFetching] = useState(false);
-  const { height, width } = Dimensions.get('window');
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const defaultImage = 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80'
   const [cordinate, setCordinate] = useState({
     longitude: 7.385256,
     latitude: 9.1322927,
@@ -53,6 +58,7 @@ const JobSwiper = () => {
     latitudeDelta: 0.05,
   });
   const [Permission, setPermission] = useState(null);
+  const [selectedUser, setSelectedUser] = useState({});
 
   const mapAnimation = new Animated.Value(0);
 
@@ -114,7 +120,7 @@ const JobSwiper = () => {
   
 
   const GetArtisan = () => {
-    console.log("__Download___Aritsan_LOCATION", auth.userData.location.coordinates[0])
+    console.log("__Download___Aritsan_LOCATION", auth.userData)
     let uri = BASEURL + `/users/location/find?longitude=${auth.userData.location.coordinates[0]}&latitude=${auth.userData.location.coordinates[1]}`;
     
     dispatch(setLoading(true));
@@ -128,9 +134,10 @@ const JobSwiper = () => {
         const {data} = res.data
         console.log("__Download___Aritsan", res)
         dispatch(setLoading(false));
-        setArtisanData(data);
-        const { location = {} } = data[0]
-        const {coordinates=[0,0]} = location
+        setArtisanData([{key: 'left-spacer'}, ...data, {key: 'right-spacer'}]);
+        const { user = {} } = data[0]
+         console.log("____OBJECT_USER__", user)
+         const {coordinates=[0,0]} = user.location
        setCordinate({
         longitude: coordinates[0],
         latitude: coordinates[1],
@@ -151,7 +158,7 @@ const JobSwiper = () => {
 
   const filterJobs = () => {
     const {latitude="", longitude = "", priority="", skill="", profession} = filters
-    let uri = BASEURL + `/projects/filter/longitude=${longitude}&latitude=${latitude}&priority=${priority}&skill_set=${skill}&profession=${profession}`;
+    let uri = BASEURL + `/profiles/artisans/longitude=${longitude}&latitude=${latitude}&priority=${priority}&skill_set=${skill}&profession=${profession}`;
     const data = {
       longitude: auth.userData.location.lng,
       latitude: auth.userData.location.lat
@@ -166,9 +173,10 @@ const JobSwiper = () => {
       const {data} = res.data
         console.log("__Download___", res)
          dispatch(setLoading(false));
-         setArtisanData(data);
-        const { location = {} } = data[0]
-        const {coordinates=[0,0]} = location
+         setArtisanData([{key: 'left-spacer'}, ...data, {key: 'right-spacer'}]);
+         const { user = {} } = data[0]
+         console.log("____OBJECT_USER__", user)
+         const {coordinates=[0,0]} = user.location
        setCordinate({
         longitude: coordinates[0],
         latitude: coordinates[1],
@@ -208,9 +216,9 @@ const JobSwiper = () => {
         const {data} = res.data
         console.log("__Download___", res)
          dispatch(setLoading(false));
-         setArtisanData(data);
-        const { location = {} } = data[0]
-        const {coordinates=[0,0]} = location
+         setArtisanData([{key: 'left-spacer'}, ...data, {key: 'right-spacer'}]);
+        const { user = {} } = data[0]
+        const {coordinates=[0,0]} = user.location
        setCordinate({
         longitude: coordinates[0],
         latitude: coordinates[1],
@@ -332,14 +340,14 @@ const JobSwiper = () => {
             onPress={()=> navigation.navigate('Profile')}
             rounded
             source={{
-              uri: 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80',
+              uri: auth.userData.avatar,
             }}
           />
 
-          <TouchableOpacity style={styles.search}>
+          <TextInput style={styles.search}>
             <Feather name="search" size={20} color='white' style={{ marginLeft: wp("2%") }} />
 
-          </TouchableOpacity>
+          </TextInput>
           <TouchableOpacity
              
               onPress={() => {
@@ -354,47 +362,95 @@ const JobSwiper = () => {
   };
 
   const RenderMapCard = () => {
+   
     return (
       <View style={styles.mapCardContainer}>
-        <FlatList
+        <Animated.FlatList
           horizontal
-          pagingEnabled
-          scrollEnabled
+          pagingEnabled={true}
+          // scrollEnabled
           contentContainerStyle={{
-            justifyContent: 'center',
-            paddingHorizontal: '5%',
+            alignItems: 'center',
+           // paddingHorizontal: '2.5%',
+          
           }}
           showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={32}
-          snapToAlignment="center"
-          data={artisanData}
+          scrollEventThrottle={16}
+          // snapToAlignment="center"
+          snapToInterval={ITEM_SIZE}
+          decelerationRate={0}
+          onScroll={Animated.event(
+            [{nativeEvent:{contentOffset: {x: scrollX}}}],
+            {useNativeDriver: true}
+          )}
           bounces={false}
+          data={artisanData}
+        
           keyExtractor={(item, index) => `${index}`}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={()=>navigation.navigate("ArtisanProfile", {...item}) } style={[styles.shadow, styles.cardContent]}>
+          renderItem={({ item, index }) => {
+            const {user={},expertise={} } = item
+            if (!user.id) {
+              return <View style={{width: ITEM_SIZE,  marginHorizontal: wp('3%'),}} />
+            }
+            const inputRange = [
+              (index - 2) * ITEM_SIZE,
+              (index - 1) * ITEM_SIZE,
+              index * ITEM_SIZE,
+             
+            ];
+            const translateY = scrollX.interpolate({
+              inputRange,
+              outputRange: [0, -30, 0]
+            })
+            return(
+           <View style={{ width: ITEM_SIZE,}}>
+              <Animated.View style={[styles.shadow, styles.cardContent, {transform:[{translateY}]}]}>
+                 <TouchableOpacity onPress={()=>{
+                    const { location = {} } = user
+                    const {coordinates=[0,0]} = location
+                   setCordinate({
+                    longitude: coordinates[0],
+                    latitude: coordinates[1],
+                    longitudeDelta: 0.05,
+                    latitudeDelta: 0.05,
+                  })
+                  setSelectedUser(user)
+                  //  setCordinate(item.location.coordinates)
+                  //  navigation.navigate("ArtisanProfile", {...item})
+                   }}
+                  style={{ 
+                    justifyContent: 'center',
+                  alignItems: 'center',
+                   flex: 1,
+                   paddingVertical: wp('2.5%'),
+                   paddingHorizontal: wp('5%'),
+                   } } >
               <Image
-                source={{ uri: item.image_url }}
+                source={{ uri: user.avatar || defaultImage }}
                 style={styles.card_image}
               />
               <View style={styles.rating_box}>
                 <FontAwesome name='star' style={[styles.rating, {color: "orange", marginRight: wp('1%')}]} />
-                <Text style={styles.rating}>4.5</Text>
+                <Text style={styles.rating}>{user.rating||"4.5"}</Text>
               </View>
-              <Text style={styles.name}>{item.first_name||item.name}</Text>
+              <Text style={styles.name}>{user.first_name||user.name}</Text>
               <View>
                 
               </View>
               <SkillBadge>
                     <Text
                       style={styles.profession}>
-                      {item.profession || "Doctor"}
+                      {`${expertise.category}`.substring(0,6)}
                     </Text>
                   </SkillBadge>
               
-              <Text style={styles.distance}>{item.distance||"90M away"}</Text>
-              <Text style={styles.location}>{item.address_str?item.address_str.split(',')[1]:"Lagos"}</Text>
-            </TouchableOpacity>
-          )}
+              <Text style={styles.distance}>{user.distance||"90M away"}</Text>
+              <Text style={styles.location}>{user.city?user.city:"Lagos"}</Text>
+              </TouchableOpacity>
+              </Animated.View>
+              </View>
+            
+          )}}
         />
       </View>
     );
@@ -412,12 +468,20 @@ const JobSwiper = () => {
         showsUserLocation={true}
         // initialPosition={cordinate}
         minZoomLevel={10}>
-        {artisanData.map(art => (
+        {artisanData.map(item => { 
+           const {user={}} =item
+           const art = user
+          return(
+         
           <Marker
-            onSelect={ ()=>{}}
-            style={{width: 400, height: 400}}
+            onSelect={ ()=>{
+              navigation.navigate("ArtisanProfile", {...art})
+            }}
+
+            // style={{width: 400, height: 400}}
             identifier={art.id}
             id={art.id}
+            onPress={()=>navigation.navigate("ArtisanProfile", {...art})}
             draggable={false}
             coordinate={{
               latitude: art.location&& art.location.coordinates[1],
@@ -425,23 +489,26 @@ const JobSwiper = () => {
             }}
           //   image={require('src/assets/marker.png')}
           >
-           
+         
             <ImageBackground
-              source={require('src/assets/mark.png')}
+           
+              source={selectedUser.id === art.id ?require('src/assets/mark.png'):require('src/assets/location-pin.png')}
               style={{
-                width: 50,
-                height: 50,
+                width: selectedUser.id === art.id ?wp('30%'): wp('21%'),
+                height:selectedUser.id === art.id ? wp('30%'):wp('21%'),
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
+                 
               <Image
-                source={{ uri: art.image_url }}
+              
+                source={{ uri: art.avatar }}
                 style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
+                  width: selectedUser.id === art.id ?wp('17%'): wp('12%'),
+                  height: selectedUser.id === art.id? wp('17%'):wp('12%'),
+                  borderRadius: 100,
                   marginBottom: 10,
                   borderWidth: 1.5,
                   borderColor: '#fff',
@@ -455,9 +522,16 @@ const JobSwiper = () => {
                   elevation: 5,
                 }}
               />
+             
             </ImageBackground>
+           
           </Marker>
-        ))}
+        
+        )}
+        
+        )
+        
+        }
       </MapView>
       <View
         style={{
@@ -539,44 +613,9 @@ const JobSwiper = () => {
             onChangeText={itemValue => onChangeText('skill', itemValue)}
           />
 
-          {/* <SelectField
-            value={''}
-            label="Location"
-            items={[
-              {label: 'Junior WAEC', value: 'Junior WAEC'},
-              {label: 'WAEC', value: 'WAEC'},
-              {label: 'B.Sc', value: 'Bachelor of Science'},
-              {label: 'Masters', value: 'Masters'},
-              {label: 'PhD', value: 'Doctor of Philosophy'},
-            ]}
-            onChangeText={itemValue => onChangeText('degree', itemValue)}
-          />
+         
 
-          <SelectField
-            value={''}
-            label="Distance"
-            items={[
-              {label: 'Junior WAEC', value: 'Junior WAEC'},
-              {label: 'WAEC', value: 'WAEC'},
-              {label: 'B.Sc', value: 'Bachelor of Science'},
-              {label: 'Masters', value: 'Masters'},
-              {label: 'PhD', value: 'Doctor of Philosophy'},
-            ]}
-            onChangeText={itemValue => onChangeText('degree', itemValue)}
-          /> */}
-
-          <SelectField
-            value={''}
-            label="Urgency"
-            items={[
-              {label: 'Junior WAEC', value: 'Junior WAEC'},
-              {label: 'WAEC', value: 'WAEC'},
-              {label: 'B.Sc', value: 'Bachelor of Science'},
-              {label: 'Masters', value: 'Masters'},
-              {label: 'PhD', value: 'Doctor of Philosophy'},
-            ]}
-            onChangeText={itemValue => onChangeText('priority', itemValue)}
-          />
+         
          
         </ScrollView>
       </RBSheet>
@@ -614,7 +653,15 @@ const styles = StyleSheet.create({
     top: 40,
     backgroundColor: '#fff',
   },
-
+  filterContainer: {
+    flex: 1,
+    paddingHorizontal: wp('8%'),
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    marginBottom: hp('2%'),
+    alignItems: 'center',
+  },
   search: {
     backgroundColor: '#E8E8E8',
     borderRadius: 25,
@@ -624,6 +671,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     // alignItems: 'center'
+    paddingLeft: 10,
   },
   children: {
     // backgroundColor: 'blue',
@@ -648,18 +696,18 @@ const styles = StyleSheet.create({
   },
   mapCardContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 0,
   },
   cardContent: {
+   
     borderRadius: 20,
-    paddingVertical: wp('2.5%'),
-    paddingHorizontal: wp('5%'),
-    marginHorizontal: wp('2.5%'),
-    marginVertical: wp('5%'),
+   
+    marginHorizontal: wp('3%'),
+    marginVertical: wp('2%'),
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
+    // justifyContent: 'center',
+    // alignItems: 'center',
     backgroundColor: '#FEFEFE',
     marginTop: hp('5%')
   },

@@ -137,22 +137,40 @@ const {params = {}} = props.route
     return (
       <TouchableOpacity
         style={{paddingHorizontal: 10}}
-        onPress={() => navigation.goBack()}>
-        <MaterialIcons name="favorite" style={styles.header_icon} />
+        onPress={() =>{ 
+          Alert.alert(
+            'Delete Project',
+            'Are you sure you want to Delete this Project?',
+            [
+              {
+                text: 'Cancel',
+                onPress: () => {
+                  console.log('cancel logout');
+                },
+                style: 'cancel',
+              },
+              {
+                text: 'Yes',
+                onPress: () => {
+                 
+                  deleteProposal()
+                
+                },
+              },
+            ],
+          );
+         }}>
+        <MaterialIcons name="delete" style={styles.header_icon} />
       </TouchableOpacity>
     );
   };
  
 
 
-  const sendProposal = () => {
-    let uri = BASEURL + '/proposals/add';
-    const data = {
-      artisan_id: auth.userData.id,
-      protisan_id: item.user.id,
-      ...value
-    };
-    axios.post(uri,data, {
+  const deleteProposal = () => {
+    let uri = BASEURL + `/projects/${item.id}`;
+   
+    axios.delete(uri, {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
         Authorization: 'Bearer' + ' ' + auth.token,
@@ -160,20 +178,12 @@ const {params = {}} = props.route
     })
       .then(res => {
        
-        Toast.show({
-          text: 'Offer Accepted',
-          buttonText: 'Continue',
-          type: 'success',
-        });
-        console.log('here3');
+       navigation.goBack()
+        console.log('__PROJECT__', res);
       })
       .catch(error => {
         console.log(error);
-        Toast.show({
-          text: 'Could not send',
-          buttonText: 'okay',
-          type: 'warning',
-        });
+      
       });
   };
 
@@ -207,188 +217,191 @@ const {params = {}} = props.route
   var amountToReceived = num - (num * .20);
   return (
     <Container>
-      <Header
-        leftComponent={<BackButton />}
-        rightComponent={<RightButton />}
-        //rightComponent={<FilterButton />}
-        centerComponent={{
-          text: 'View Offer',
-          style: {
-            fontWeight: '700',
-            fontSize: wp('5%'),
-            color: colors.white,
-          },
-        }}
-        statusBarProps={{barStyle: 'dark-content'}}
-        containerStyle={{
-          backgroundColor: 'transparent',
-          justifyContent: 'space-between',
-          borderBottomWidth: 0,
-          paddingVertical: hp('3%'),
-          backgroundColor: colors.green,
-          borderBottomLeftRadius: wp('8%'),
-          borderBottomRightRadius: wp('8%'),
-        }}
-      />
-      <ContentContainer containerStyle={{flex: 1}}>
-        <TitleSection>
-          <Title>{item.name}</Title>
-        </TitleSection>
-        <Row style={{marginHorizontal: wp('4%'), alignItems: 'center'}}>
-          <MaterialIcons style={styles.paste_icon_style} name="content-paste" />
-          <DescriptionHeader>Job Description</DescriptionHeader>
-          <TimeWrapper>{moment(item.createdAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
-        </Row>
-        <InnerContentContainer>
-          {/* <Sectiontitle>Description :</Sectiontitle> */}
-          <ProposalWrap>
-            <ProposalImage style={{}}>
-              <Image
-                source={{
-                  uri: item && item.avatar && item.avatar !=="" ? item.avatar : defaultImage,
-                }}
-                style={{...StyleSheet.absoluteFill, borderRadius: 50}}
+    <Header
+      leftComponent={<BackButton />}
+      rightComponent={<RightButton />}
+      //rightComponent={<FilterButton />}
+      centerComponent={{
+        text: 'View Offer',
+        style: {
+          fontWeight: '700',
+          fontSize: wp('5%'),
+          color: colors.white,
+        },
+      }}
+      statusBarProps={{barStyle: 'dark-content'}}
+      containerStyle={{
+        backgroundColor: 'transparent',
+        justifyContent: 'space-between',
+        borderBottomWidth: 0,
+        paddingVertical: hp('3%'),
+        backgroundColor: colors.green,
+        borderBottomLeftRadius: wp('8%'),
+        borderBottomRightRadius: wp('8%'),
+      }}
+    />
+    <ContentContainer containerStyle={{flex: 1}}>
+      <TitleSection>
+        <Title>{item.name}</Title>
+      </TitleSection>
+      <Row style={{marginHorizontal: wp('4%'), alignItems: 'center'}}>
+        <MaterialIcons style={styles.paste_icon_style} name="content-paste" />
+        <DescriptionHeader>Job Description</DescriptionHeader>
+        <TimeWrapper>{moment(item.updatedAt, "YYYYMMDD").fromNow() ||"5 min ago"}</TimeWrapper>
+      </Row>
+      <InnerContentContainer>
+        {/* <Sectiontitle>Description :</Sectiontitle> */}
+        <ProposalWrap>
+          <ProposalImage
+          onPress={()=>{
+            navigation.navigate('ProtisanProfile', {id: item.user_id})
+          }}
+           style={{}}>
+            <Image
+              source={{
+                uri: item && item.user ? item.user.avatar : defaultImage,
+              }}
+              style={{...StyleSheet.absoluteFill, borderRadius: 50}}
+            />
+          </ProposalImage>
+
+          <ProposalBody>
+            <ReadMore
+              numberOfLines={4}
+              renderTruncatedFooter={_renderTruncatedFooter}
+              renderRevealedFooter={_renderRevealedFooter}>
+              <JobDesc>{item.description}</JobDesc>
+            </ReadMore>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                flex: 1,
+              }}>
+              <FlatList
+                data={item.skill_set}
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
+                bounces={false}
+                decelerationRate={'normal'}
+                scrollEnabled={true}
+                //numColumns={2}
+                horizontal={true}
+                style={{marginTop: 10, flex: 1}}
+                // renderItem={({item}) => _renderGalleryImage}
+                renderItem={({item, index}) => (
+                  <View style={{flex: 1, width: '100%'}}>
+                    <SkillBadge key={index.toString()}>
+                      <BadgeText>{item}</BadgeText>
+                    </SkillBadge>
+                  </View>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                //ItemSeparatorComponent={ListItemSeparator}
               />
-            </ProposalImage>
-
-            <ProposalBody>
-              <ReadMore
-                numberOfLines={4}
-                renderTruncatedFooter={_renderTruncatedFooter}
-                renderRevealedFooter={_renderRevealedFooter}>
-                <JobDesc>{item.description}</JobDesc>
-              </ReadMore>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  flex: 1,
-                }}>
-                <FlatList
-                  data={item.skill_set}
-                  showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}
-                  bounces={false}
-                  decelerationRate={'normal'}
-                  scrollEnabled={true}
-                  //numColumns={2}
-                  horizontal={true}
-                  style={{marginTop: 10, flex: 1}}
-                  // renderItem={({item}) => _renderGalleryImage}
-                  renderItem={({item, index}) => (
-                    <View style={{flex: 1, width: '100%'}}>
-                      <SkillBadge key={index.toString()}>
-                        <BadgeText>{item}</BadgeText>
-                      </SkillBadge>
-                    </View>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                  //ItemSeparatorComponent={ListItemSeparator}
+              <StatusWrap>
+                <Feather
+                  name="info"
+                  style={{
+                    fontSize: wp('4%'),
+                    color: colors.green,
+                    fontWeight: '500',
+                    marginLeft: wp('2%'),
+                  }}
                 />
-                <StatusWrap>
-                  <Feather
-                    name="info"
-                    style={{
-                      fontSize: wp('4%'),
-                      color: colors.green,
-                      fontWeight: '500',
-                      marginLeft: 7,
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: wp('3.5%'),
-                      color: colors.green,
-                      fontWeight: '500',
-                      marginLeft: 7,
-                    }}>
-                    {item.status || "Open"}
-                  </Text>
-                </StatusWrap>
-              </View>
-            </ProposalBody>
-          </ProposalWrap>
+                <Text
+                  style={{
+                    fontSize: wp('3.5%'),
+                    color: colors.green,
+                    fontWeight: '500',
+                    marginLeft: wp('2%'),
+                  }}>
+                  {item.status || "Open"}
+                </Text>
+              </StatusWrap>
+            </View>
+          </ProposalBody>
+        </ProposalWrap>
 
-          <ProposalWrap>
-            <MaterialCommunityIcons
-              name="paperclip"
+        <ProposalWrap>
+          <MaterialCommunityIcons
+            name="paperclip"
+            style={{
+              fontSize: wp('6%'),
+              color: colors.grey,
+              fontWeight: '500',
+              marginLeft: wp('10%'),
+            }}
+          />
+
+          <ProposalBody>
+            <View
               style={{
-                fontSize: wp('6%'),
-                color: colors.grey,
-                fontWeight: '500',
-                marginLeft: wp('10%'),
-              }}
-            />
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                flex: 1,
+              }}>
+              <FlatList
+                data={item.attachments }
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
+                bounces={false}
+                decelerationRate={'normal'}
+                scrollEnabled={true}
+                //numColumns={2}
+                horizontal={true}
+                style={{marginTop: 10, flex: 1}}
+                // renderItem={({item}) => _renderGalleryImage}
+                renderItem={({item, index}) => (
+                  <ProposalImage style={{}}>
+                    <Image
+                      source={{
+                        uri: item,
+                      }}
+                      style={{...StyleSheet.absoluteFill, borderRadius: 8}}
+                    />
+                  </ProposalImage>
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                //ItemSeparatorComponent={ListItemSeparator}
+              />
+               {item.attachments && item.attachments.length > 3 &&
+              <CountWrap style={{flex: 0.2}}>
+                <Text
+                  style={{
+                    fontSize: wp('2.5%'),
+                    color: colors.grey,
+                    fontWeight: '300',
+                    // marginLeft: 7,
+                  }}>
+                  {item.attachments && item.attachments.length > 3?`+${item.attachments.length}`: ''}
+                </Text>
+              </CountWrap>
+             }
+            </View>
+          </ProposalBody>
+        </ProposalWrap>
 
-            <ProposalBody>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  flex: 1,
-                }}>
-                <FlatList
-                  data={item.attachments || [defaultImage,
-                    defaultImage,
-                    defaultImage,
-                    defaultImage,]}
-                  showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}
-                  bounces={false}
-                  decelerationRate={'normal'}
-                  scrollEnabled={true}
-                  //numColumns={2}
-                  horizontal={true}
-                  style={{marginTop: 10, flex: 1}}
-                  // renderItem={({item}) => _renderGalleryImage}
-                  renderItem={({item, index}) => (
-                    <ProposalImage style={{}}>
-                      <Image
-                        source={{
-                          uri: item.uri,
-                        }}
-                        style={{...StyleSheet.absoluteFill, borderRadius: 8}}
-                      />
-                    </ProposalImage>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                  //ItemSeparatorComponent={ListItemSeparator}
-                />
-                <StatusWrap style={{flex: 0}}>
-                  <Text
-                    style={{
-                      fontSize: wp('2.5%'),
-                      color: colors.grey,
-                      fontWeight: '300',
-                      marginLeft: 7,
-                    }}>
-                    {item.attachments && item.attachments.length > 3?`+${item.attachments.length}`: ''}
-                  </Text>
-                </StatusWrap>
-              </View>
-            </ProposalBody>
-          </ProposalWrap>
+        <ProposalWrap>
+          <MaterialIcons
+            name="location-pin"
+            style={{
+              fontSize: wp('3.5%'),
+              color: colors.grey,
+              fontWeight: '500',
+              marginLeft: wp('10%'),
+            }}
+          />
 
-          <ProposalWrap>
-            <MaterialIcons
-              name="location-pin"
-              style={{
-                fontSize: wp('3.5%'),
-                color: colors.grey,
-                fontWeight: '500',
-                marginLeft: wp('10%'),
-              }}
-            />
+          <ProposalBody>
+            <DescriptionText>
+              {item.address_str || "No. 19 Nile Crescent, Sun City, Galadimawa, Abuja"}
+            </DescriptionText>
+          </ProposalBody>
+        </ProposalWrap>
+      </InnerContentContainer>
 
-            <ProposalBody>
-              <DescriptionText>
-                {item.address_str || "No. 19 Nile Crescent, Sun City, Galadimawa, Abuja"}
-              </DescriptionText>
-            </ProposalBody>
-          </ProposalWrap>
-        </InnerContentContainer>
-
-        <InnerContentContainer>
+      <MapContentContainer>
           
           <MapView
         ref={mapRef}
@@ -425,10 +438,8 @@ const {params = {}} = props.route
             coordinate={{
               latitude: item.location && item.location.coordinates[1],
               longitude: item.location && item.location.coordinates[0],
-              longitudeDelta: 0.05,
-              latitudeDelta: 0.05,
             }}
-            image={require('src/assets/marker.png')}
+          //   image={require('src/assets/marker.png')}
           >
            
             <ImageBackground
@@ -464,7 +475,7 @@ const {params = {}} = props.route
           </Marker>
        
       </MapView>
-        </InnerContentContainer>
+        </MapContentContainer>
 
         <InnerContentContainer>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
@@ -741,6 +752,23 @@ const Container = styled.View`
   ${'' /* background-color: white; */}
 `;
 
+const MapContentContainer = styled.View`
+ 
+  background-color: #ffffff;
+  margin-vertical: ${hp('1%')};
+min-height: ${hp('10%')}
+  flex: 1;
+  border-radius: 10px;
+  ${'' /* align-items: center; */}
+`;
+
+const CountWrap = styled.View`
+flex: 0.25;
+  flex-direction: row;
+  align-items: center;
+  margin-right: ${wp('5%')}
+`;
+
 const ContentContainer = styled.ScrollView`
   padding-vertical: ${hp('1%')};
   background-color: #ebf1f2;
@@ -905,7 +933,7 @@ const ProposalWrap = styled.View`
   margin-vertical: ${hp('1%')};
 `;
 
-const ProposalImage = styled.View`
+const ProposalImage = styled.TouchableOpacity`
   height: ${wp('14%')};
   width: ${wp('14%')};
   background-color: #e2e0de;
@@ -962,5 +990,6 @@ const Label = styled.Text`
   font-weight: 700;
   color: ${colors.dark};
 `;
+
 
 export default JobOfferDetail;
