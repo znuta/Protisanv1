@@ -121,7 +121,11 @@ const JobSwiper = () => {
 
   const GetArtisan = () => {
     console.log("__Download___Aritsan_LOCATION", auth.userData)
-    let uri = BASEURL + `/users/location/find?longitude=${auth.userData.location.coordinates[0]}&latitude=${auth.userData.location.coordinates[1]}`;
+    const {location = {}} = auth.userData
+    const {coordinates = []} = location
+    const longitude = coordinates[0] === null ?"0.0": coordinates[0]
+    const latitude = coordinates[1] === null ? "0.0": coordinates[1]
+    let uri = BASEURL + `/users/location/find?longitude=${longitude}&latitude=${latitude}`;
     
     dispatch(setLoading(true));
     axios.get(uri, 
@@ -132,7 +136,7 @@ const JobSwiper = () => {
       },
       }).then(res => {
         const {data} = res.data
-        console.log("__Download___Aritsan", res)
+        console.log("__Download___Aritsan", data[0].user.location)
         dispatch(setLoading(false));
         setArtisanData([{key: 'left-spacer'}, ...data, {key: 'right-spacer'}]);
         const { user = {} } = data[0]
@@ -196,11 +200,14 @@ const JobSwiper = () => {
   const JobsSearch = () => {
 
     let uri = BASEURL + `/projects/find`;
-
+    const {location = {}} = auth.userData
+    const {coordinates = []} = location
+    const longitude = coordinates[0] === null ?"0.0": coordinates[0]
+    const latitude = coordinates[1] === null ? "0.0": coordinates[1]
     //props.setLoading(true);
     let data = {
-      longitude: auth.userData.location.lng,
-      latitude: auth.userData.location.lat,
+      longitude: longitude,
+      latitude: latitude,
       search: searchItem
     };
     axios.get(uri, 
@@ -469,8 +476,14 @@ const JobSwiper = () => {
         // initialPosition={cordinate}
         minZoomLevel={10}>
         {artisanData.map(item => { 
-           const {user={}} =item
+           const {user} =item
            const art = user
+
+           if (!art) {
+            return null
+            
+           }
+
           return(
          
           <Marker

@@ -63,7 +63,8 @@ export const artisans = [
     address: 'Dawaki, Abuja',
     stars: '5.0',
     reviews: 203,
-    coords: {
+    location: {
+      coordinates:[9.130271,7.3888904],
       latitude: 9.130271,
       longitude: 7.3888904,
     },
@@ -76,6 +77,11 @@ export const artisans = [
     address: 'Dawaki, Abuja',
     stars: '5.0',
     reviews: 150,
+    location: {
+      coordinates:[9.1322927,7.3888904],
+      latitude: 9.130271,
+      longitude: 7.3888904,
+    },
     coords: {
       latitude: 9.1322927,
       longitude: 7.3885256,
@@ -89,6 +95,11 @@ export const artisans = [
     address: 'Dawaki, Abuja',
     stars: '4.99',
     reviews: 80,
+    location: {
+      coordinates:[9.130595,7.3888904],
+      latitude: 9.130271,
+      longitude: 7.3888904,
+    },
     coords: {
       latitude: 9.130595,
       longitude: 7.390912,
@@ -102,6 +113,11 @@ export const artisans = [
     address: 'Dawaki, Abuja',
     stars: '4.99',
     reviews: 50,
+    location: {
+      coordinates:[9.130595,7.390912],
+      latitude: 9.130271,
+      longitude: 7.3888904,
+    },
     coords: {
       latitude: 9.130595,
       longitude: 7.390912,
@@ -115,6 +131,11 @@ export const artisans = [
     address: 'Dawaki, Abuja',
     stars: '4.97',
     reviews: 19,
+    location: {
+      coordinates:[9.130595,7.390912],
+      latitude: 9.130271,
+      longitude: 7.3888904,
+    },
     coords: {
       latitude: 9.130595,
       longitude: 7.390912,
@@ -128,6 +149,11 @@ export const artisans = [
     address: 'Dawaki, Abuja',
     stars: '4.95',
     reviews: 16,
+    location: {
+      coordinates:[9.130595,7.390912],
+      latitude: 9.130271,
+      longitude: 7.3888904,
+    },
     coords: {
       latitude: 9.130595,
       longitude: 7.390912,

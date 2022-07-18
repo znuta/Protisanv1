@@ -19,7 +19,8 @@ import {
   SET_LOCATION,
   SET_EDUCATION_DETAILS,
   SET_EXPERIENCE_DETAILS,
-  SET_TOAST
+  SET_TOAST,
+  SAVE_ZEGO_TOKEN
 } from 'src/redux/action-types';
 import {BASEURL} from 'src/constants/Services';
 import {CometChat} from '@cometchat-pro/react-native-chat';
@@ -147,6 +148,12 @@ const saveBalance = (data) =>{
 const saveToken = token => {
   return {
     type: SAVE_TOKEN,
+    token: token,
+  };
+};
+const saveZegoToken = token => {
+  return {
+    type: SAVE_ZEGO_TOKEN,
     token: token,
   };
 };
@@ -985,6 +992,7 @@ getArtisanEducation,
   sendOTPError,
   setLoading,
   saveToken,
+  saveZegoToken,
   saveAvatar,
   saveGovId,
   sendUserDetails,

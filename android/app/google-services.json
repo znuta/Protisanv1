@@ -1,34 +1,41 @@
 {
   "project_info": {
-    "project_number": "839790591852",
-    "project_id": "keyedin-d3114",
-    "storage_bucket": "keyedin-d3114.appspot.com"
+    "project_number": "924579769424",
+    "project_id": "keyedin-client",
+    "storage_bucket": "keyedin-client.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:839790591852:android:96db5228990e9d40e93d49",
+        "mobilesdk_app_id": "1:924579769424:android:d9d707dcf591448182b555",
         "android_client_info": {
-          "package_name": "com.keyedinv1"
+          "package_name": "app.keyedin.clientapp"
         }
       },
       "oauth_client": [
         {
-          "client_id": "839790591852-bpsvo9o8o3csc6mf8du9usqpk3d35kpd.apps.googleusercontent.com",
+          "client_id": "924579769424-7hdolsu9s7k3t6jlcqklq8tk3pajbka6.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyACCwFw608CO-dTa_C0U1tb17F5I3Cq0iU"
+          "current_key": "AIzaSyD-QJvzAdcWm4g3vlBZEKpEfduQF865xz4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "839790591852-bpsvo9o8o3csc6mf8du9usqpk3d35kpd.apps.googleusercontent.com",
+              "client_id": "924579769424-7hdolsu9s7k3t6jlcqklq8tk3pajbka6.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "924579769424-ed08gcafu2p881jccb7uv71ul9k3f87e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "app.keyedin.clientapp"
+              }
             }
           ]
         }

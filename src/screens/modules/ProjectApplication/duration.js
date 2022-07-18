@@ -257,4 +257,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: wp('3%'),
   },
+  BudgetField:{
+    width: '100%'
+  }
 });

@@ -8,6 +8,7 @@ import Main from './main/Main';
 import AuthNav from './Intro/AuthNav';
 
 import {useSelector, useDispatch} from 'react-redux';
+import { navigationRef } from './main/BottomTabs';
 
 const Stack = createStackNavigator();
 const Page = () =>{
@@ -63,7 +64,7 @@ function Navigation() {
   const dispatch = useDispatch();
   const {auth, intro} = useSelector(state => state);
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
      <Page />
     </NavigationContainer>
   );

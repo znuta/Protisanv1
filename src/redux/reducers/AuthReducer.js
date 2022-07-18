@@ -21,7 +21,8 @@ import {
   GET_ALL_JOBS,
   SET_ALL_CATEGORIES,
   SET_EXPERIENCE_DETAILS,
-  SET_TOAST
+  SET_TOAST,
+  SAVE_ZEGO_TOKEN
 } from "../action-types";
 
 const INITIAL_STATE = {
@@ -195,6 +196,13 @@ const authReducer = (state = INITIAL_STATE, action) => {
         ...state,
         //isLoggedIn: true,
         token: action.token,
+      };
+
+      case SAVE_ZEGO_TOKEN:
+     
+      return {
+        ...state,
+        zego_token: action.token,
       };
     case SAVE_ID:
       console.log("Saving Id...");

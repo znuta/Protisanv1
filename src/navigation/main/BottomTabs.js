@@ -35,7 +35,8 @@ import NewProject from 'src/screens/modules/ProjectApplication';
 import Proposal from 'src/screens/modules/Proposal';
 import ProposalDetail from 'src/screens/modules/Proposal/ProposalDetail';
 import Insight from 'src/screens/modules/Insight';
-import { ChatScreen } from "src/screens/modules/Messages/ChatScreen";
+import  ChatScreen  from "src/screens/modules/Messages/ChatScreen";
+import  CallPage  from "src/screens/modules/Messages/CallPage";
 import { MainCallScreen } from "src/screens/modules/Messages/MainCallScreen";
 import Profile from 'src/screens/modules/Profile/';
 import ArtisanProfile from 'src/screens/modules/ArtisanProfile';
@@ -55,6 +56,7 @@ import { CallingScreen } from 'src/screens/modules/Messages/CallingScreen';
 import JobOffer from 'src/screens/modules/JobOffer'
 import { CometChat } from '@cometchat-pro/react-native-chat';
 import { getUser } from 'src/redux/actions/AuthActions';
+import { createNavigationContainerRef, StackActions } from '@react-navigation/native';
 
 
 const Tab = createBottomTabNavigator();
@@ -90,7 +92,7 @@ export function HomeTabs({navigation, route}) {
   },[])
 
   const addCallListner = () =>{
-    var listnerID = "CHAT_SCREEN_CALL_LISTNER";
+    var listnerID = "CHAT_SCREEN_CALL_LISTNER_11";
   
     CometChat.addCallListener(
       listnerID,
@@ -314,6 +316,7 @@ const BottomTabComponent = reduxProps => {
       <Stack.Screen name="EditUser" component={EditUser} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="ChatScreen" component={ChatScreen} />
+      <Stack.Screen name="CallPage" component={CallPage} />
       <Stack.Screen name="CallingScreen" component={CallingScreen} />
       <Stack.Screen name="MainCallScreen" component={MainCallScreen} />
       <Stack.Screen name="CreateJobOffer" component={JobOffer} />
@@ -326,5 +329,19 @@ const BottomTabComponent = reduxProps => {
     </Stack.Navigator>
   );
 };
+
+const navigationRef = createNavigationContainerRef()
+
+ function pushToScreen(...args) {
+  if (navigationRef.isReady()) {
+    navigationRef.dispatch(StackActions.push(...args));
+  }
+}
+
+export {
+  
+  navigationRef,
+  pushToScreen
+}
 
 export default BottomTabComponent;
