@@ -16,8 +16,8 @@ import { useSelector } from 'react-redux';
 export const CallingScreen = (props) => {
     const {params = {}} =  props.route
 
-    // console.log("___CALL__PROPS__", props)
-    const {entity, callType, entityType,enableDefaultLayout,defaultLayout,acceptedFrom, isOutgoingCall, call = {}, userObject = {},outgoingCallAccepted = false, roomID, callingID} = params
+    console.log("___CALL__PROPS__", params)
+    const {entity, callType, entityType,roomID, callingID, enableDefaultLayout,defaultLayout,acceptedFrom, isOutgoingCall, call = {}, userObject = {},outgoingCallAccepted = false, } = params
     const navigation = useNavigation();
     const [sessionID,setSessionID] = useState(call.sessionId)
     const [callingText, setCallingText] = useState("Calling...")
@@ -30,7 +30,7 @@ export const CallingScreen = (props) => {
         appID: ZEGO_APPID,
         serverUrl: ZEGO_SERVER_URL,
         zegoToken: auth.zego_token,
-        userID: auth.id
+        userID: auth.userData.id
     }
   
     // Sound.setCategory('Playback');
@@ -54,22 +54,22 @@ export const CallingScreen = (props) => {
         //     });
         // },[isSpeaker])
 
-        useEffect(()=>{
+        // useEffect(()=>{
 
-            if (roomID && roomID !=="") {
+        //     if (roomID && roomID !=="") {
                 
-                handleIncomingCall(roomID)
+        //         handleIncomingCall(roomID)
                
-            }else{
+        //     }else{
     
                 
-            }
+        //     }
     
-            return () => {
-                ding.release();
-              };
+        //     return () => {
+        //         ding.release();
+        //       };
            
-        },[])
+        // },[])
    
     
     const renderVideoCallScreen = () => {
@@ -145,7 +145,7 @@ export const CallingScreen = (props) => {
                     <View style={{ flexDirection: 'row',  marginBottom: hp('3%')}}>
 
                         {!isOutgoingCall &&  <TouchableOpacity style={styles.answerButton} onPress={()=>{
-                            acceptCall()
+                             handleIncomingCall(roomID)
                         
                             }}>
                             <MaterialCommunityIcons  name="phone" size={32} color="white"/>
@@ -210,8 +210,8 @@ export const CallingScreen = (props) => {
    const renderOutgoingCallScreen = () =>{
         // var receiver = Call.getCallReceiver();
         var receiver = entity;
-        var avatar = receiver.avatar;
-        var name = receiver.username;
+        var avatar = receiver.callerUserIcon;
+        var name = receiver.callerUserName;
 
         if(avatar === '' || avatar === undefined || avatar === null){
             if(entityType === 'user'){

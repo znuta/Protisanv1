@@ -36,13 +36,13 @@ import Toast from 'src/component/Toast';
 import { createNotificationListeners, checkPermission } from 'src/redux/actions/Notification';
 
 
-if (!global.btoa) {
-  global.btoa = encode;
-}
+// if (!global.btoa) {
+//   global.btoa = encode;
+// }
 
-if (!global.atob) {
-  global.atob = decode;
-}
+// if (!global.atob) {
+//   global.atob = decode;
+// }
 
  let appID = '206143375b8d8a36';
  let region = 'us';

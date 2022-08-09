@@ -18,8 +18,8 @@ import ZegoExpressEngine, {
     ZegoScenario,
     ZegoUpdateType,
 } from 'zego-express-engine-reactnative';
-import { ZegoExpressManager } from '../../../../../ZegoExpressManager';
-import { ZegoMediaOptions } from '../../../../../ZegoExpressManager/index.entity';
+import { ZegoExpressManager } from 'src/screens/modules/Messages/ZegoExpressManager';
+import { ZegoMediaOptions } from 'src/screens/modules/Messages/ZegoExpressManager/index.entity';
 
 
 const styles = StyleSheet.create({
@@ -128,7 +128,7 @@ export default class CallPage extends Component {
         this.remoteViewRef = React.createRef();
         this.appID = parseInt(this.appData.appID);
         this.token = this.appData.zegoToken;
-        this.roomID = props.route.params.roomID;
+        this.roomID = 333 //props.route.params.roomID;
         this.userID = this.appData.userID;
         this.userName = props.route.params.userName;
         
@@ -149,11 +149,14 @@ export default class CallPage extends Component {
         };
         ZegoExpressManager.createEngine(profile).then(async () => {
             console.warn('ZegoExpressEngine created!')
-            // Register callback
-            this.registerCallback();
 
             // Join room and wait...
             this.joinRoom();
+            
+            // Register callback
+            this.registerCallback();
+
+            
         });
     }
     componentWillUnmount() {
@@ -270,7 +273,7 @@ export default class CallPage extends Component {
             .then(() => {
                 console.warn('Leave successful');
                 // Back to home page
-                this.props.navigation.goBack();
+                this.props.navigation.navigate('Home', {appData: this.appData});
             });
     };
 
@@ -307,9 +310,7 @@ export default class CallPage extends Component {
                     <TouchableOpacity
                         style={styles.micCon}
                         onPress={this.enableMic.bind(this)}>
-                            
                         <Image style={styles.image} source={require('../../../../assets/img/mic.png')} />
-                        
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.phoneCon}
