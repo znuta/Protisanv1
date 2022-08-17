@@ -126,14 +126,14 @@ console.log("___PARAMAA___", params)
     // const art = artisan.reviews ?? 0;
     // setReviewart(art);
     //console.log(portfolio);
-    getUser(id, ({user = {}, expertise = {}, employment = {},education = {},comments = {}, rating="",job_success_rate={}}) => {
+    dispatch(getUser(id, ({user = {}, expertise = {}, employment = {},education = {},comments = {}, rating="",job_success_rate={}}) => {
       console.log("___USER___LOG__+", user)
       setArtisan(user);
       setExpertises(expertise)
       setReviewsd(comments);
       setRating(rating);
       setJobSuccess(job_success_rate)
-    });
+    }));
     GetPortfolio(id,(res,err)=>{
       if (err !== null) {
         

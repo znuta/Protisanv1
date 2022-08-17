@@ -191,6 +191,7 @@ const UserLogin = props => {
           console.log("Something went wrong", error);
         }
             );
+            
             // Toast.show({
             //   type: 'success',
             //   text1: 'Login Success',
@@ -200,9 +201,9 @@ const UserLogin = props => {
             dispatch(saveToken(data.token));
             dispatch(sendUserDetails(data))
             // dispatch(setIsAuthenticated(true));
-        dispatch(completeRegistration(true));
-        AsyncStorage.setItem("token", data.token)
-      navigation.navigate('Main');
+            dispatch(completeRegistration(true));
+            AsyncStorage.setItem("token", data.token)
+            navigation.navigate('Main');
          
         })
         .catch(error => {

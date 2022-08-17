@@ -49,6 +49,12 @@ const CompletedProjectDetail = props => {
   const [defaultImage, setDefaultImage] = useState(
     'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1222&q=80',
   );
+  const [cordinate, setCordinate] = useState({
+    longitude: 7.385256,
+    latitude: 9.1322927,
+    longitudeDelta: 0.05,
+    latitudeDelta: 0.05,
+  });
   const [value, setValue] = useState({});
   const onChangeText = (key, data) => {
     setValue({...value, [key]: data});
@@ -64,6 +70,19 @@ const {params = {}} = props.route
       
     }
   }, [params]);
+
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.fitToSuppliedMarkers([item.id]);
+    }
+    setCordinate({
+      latitude: item.location && item.location.coordinates[1],
+      longitude: item.location && item.location.coordinates[0],
+      longitudeDelta: 0.05,
+      latitudeDelta: 0.05,
+    })
+  }, [item]);
+
 
     const documentPicker = async () => {
 
@@ -396,30 +415,14 @@ const {params = {}} = props.route
         <MapContentContainer>
           
           <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
-        style={{ flex: 1, height: hp('30%') }}
-        initialRegion={{
-          latitude: item.location && item.location.coordinates[1],
-          longitude: item.location && item.location.coordinates[0],
-          longitudeDelta: 0.05,
-         latitudeDelta: 0.05,
-        }}
-        region={{
-          latitude: item.location && item.location.coordinates[1],
-          longitude: item.location && item.location.coordinates[0],
-          longitudeDelta: 0.05,
-          latitudeDelta: 0.05,
-        }}
-        zoomEnabled={true}
-        showsUserLocation={true}
-        initialPosition={{
-          latitude: item.location && item.location.coordinates[1],
-          longitude: item.location && item.location.coordinates[0],
-          longitudeDelta: 0.05,
-          latitudeDelta: 0.05,
-        }}
-        minZoomLevel={2}>
+            ref={mapRef}
+            provider={PROVIDER_GOOGLE}
+            style={{ flex: 1, height: hp('30%') }}
+            initialRegion={cordinate}
+            region={cordinate}
+            zoomEnabled={true}
+            showsUserLocation={true}
+            minZoomLevel={2}>
         
           <Marker
             onSelect={ ()=>{}}
@@ -427,10 +430,7 @@ const {params = {}} = props.route
             identifier={item.id}
             id={item.id}
             draggable={false}
-            coordinate={{
-              latitude: item.location && item.location.coordinates[1],
-              longitude: item.location && item.location.coordinates[0],
-            }}
+            coordinate={cordinate}
           //   image={require('src/assets/marker.png')}
           >
            

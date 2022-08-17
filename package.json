@@ -16,13 +16,14 @@
     "build-clean": "cd android && ./gradlew clean"
   },
   "dependencies": {
+    "@cometchat-pro/react-native-calls": "^2.2.0",
     "@cometchat-pro/react-native-chat": "3.0.7",
     "@notifee/react-native": "^5.4.1",
     "@react-native-async-storage/async-storage": "^1.17.6",
+    "@react-native-community/netinfo": "^7.1.7",
     "@react-native-firebase/app": "^14.5.0",
     "@react-native-firebase/messaging": "^14.5.0",
     "@react-native-firebase/storage": "^14.5.0",
-    "@react-native-community/netinfo": "^7.1.7",
     "@react-native-picker/picker": "^2.2.1",
     "@react-navigation/bottom-tabs": "^6.0.9",
     "@react-navigation/native": "^6.0.6",
@@ -83,7 +84,7 @@
     "redux-persist": "^6.0.0",
     "redux-thunk": "^2.4.1",
     "styled-components": "^5.3.3",
-    "yarn": "^1.22.17",
+    "yarn": "^1.22.19",
     "zego-express-engine-reactnative": "^0.18.0"
   },
   "devDependencies": {

@@ -222,7 +222,7 @@ function Wallet(props) {
       />
      
       <BalanceContainer>
-        <View style={{ paddingLeft: 15 }}>
+        <View style={{ paddingLeft: 15, minWidth: wp('60%') }}>
           <WalletBalanceWrap>
             <WalletBalance>
               &#8358;{' '}
@@ -542,12 +542,16 @@ const WalletBalanceWrap = styled.View`
 `;
 
 const WalletBalance = styled.Text`
+  flex: 1;
+  flex-wrap: wrap;
   font-size: ${wp('8%')};
   font-weight: 900;
   color: white;
 `;
 
 const EarningBalance = styled.Text`
+  flex: 1;
+  flex-wrap: wrap;
   font-size: ${wp('5.5%')};
   font-weight: 900;
   color: white;
